@@ -1,4 +1,4 @@
 function information() {
-  return <div>information</div>;
+  return <div>wtf</div>;
 }
 export default information;
