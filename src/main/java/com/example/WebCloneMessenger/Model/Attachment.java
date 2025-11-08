@@ -32,7 +32,7 @@ public class Attachment {
             name = "primary_sequence",
             sequenceName = "primary_sequence",
             allocationSize = 1,
-            initialValue = 6
+            initialValue = 21
     )
     @GeneratedValue(
             strategy = GenerationType.SEQUENCE,
