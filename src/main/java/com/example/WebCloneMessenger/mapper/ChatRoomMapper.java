@@ -12,29 +12,12 @@ import org.mapstruct.Named;
 @Mapper(componentModel = "spring")
 public interface ChatRoomMapper {
 
-    @Mapping(target = "idUser", source = "idUser", qualifiedByName = "mapUserToId")
-    @Mapping(target = "chatroom", source = "chatroom", qualifiedByName = "mapChatRoomToId")
-    @Mapping(target = "replyMessage", source = "replyMessage", qualifiedByName = "mapReplyMessageToId")
-    MessageDTO toDto(Message message);
+    @Mapping(source = "creator.id", target = "creator")
+    @Mapping(source = "lastMessage.id",target = "lastMessage")
+    ChatRoomDTO toDto(ChatRoom chatRoom);
 
-    @Mapping(target = "idUser", ignore = true)
-    @Mapping(target = "chatroom", ignore = true)
-    @Mapping(target = "replyMessage", ignore = true)
-    Message toEntity(MessageDTO dto);
-
-    // ✅ Các hàm phụ đảm bảo compile-time an toàn
-    @Named("mapUserToId")
-    public static Integer mapUserToId(User user) {
-        return user != null ? user.getId() : null;
-    }
-
-    @Named("mapChatRoomToId")
-    public static Integer mapChatRoomToId(ChatRoom chatRoom) {
-        return chatRoom != null ? chatRoom.getId() : null;
-    }
-
-    @Named("mapReplyMessageToId")
-    public static Integer mapReplyMessageToId(Message reply) {
-        return reply != null ? reply.getId() : null;
-    }
+    @Mapping(target = "creator", ignore = true)
+    @Mapping(target = "lastMessage", ignore = true)
+    ChatRoom toEntity(ChatRoomDTO dto);
 }
+

@@ -1,8 +1,10 @@
 package com.example.WebCloneMessenger.Controller;
 
 import com.example.WebCloneMessenger.DTO.ChatRoomDTO;
+import com.example.WebCloneMessenger.DTO.ChatRoomProjection;
 import com.example.WebCloneMessenger.service.ChatRoomService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -13,13 +15,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping(value = "/api/chatRooms", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequiredArgsConstructor
 public class ChatRoomResource {
 
     private final ChatRoomService chatRoomService;
-
-    public ChatRoomResource(final ChatRoomService chatRoomService) {
-        this.chatRoomService = chatRoomService;
-    }
 
     @GetMapping
     public ResponseEntity<List<ChatRoomDTO>> getAllChatRooms() {
@@ -51,4 +50,9 @@ public class ChatRoomResource {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<ChatRoomProjection>> getChatRooms(
+            @PathVariable Integer userId) {
+        return ResponseEntity.ok(chatRoomService.getChatRoomsForUser(userId));
+    }
 }

@@ -4,10 +4,12 @@ import com.example.WebCloneMessenger.DTO.FriendRequestDTO;
 import com.example.WebCloneMessenger.Model.FriendRequest;
 import com.example.WebCloneMessenger.Model.User;
 import com.example.WebCloneMessenger.events.BeforeDeleteUser;
+import com.example.WebCloneMessenger.mapper.FriendRequestMapper;
 import com.example.WebCloneMessenger.repos.FriendRequestRepository;
 import com.example.WebCloneMessenger.repos.UserRepository;
 import com.example.WebCloneMessenger.util.NotFoundException;
 import com.example.WebCloneMessenger.util.ReferencedException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -16,16 +18,12 @@ import java.util.List;
 
 
 @Service
+@RequiredArgsConstructor
 public class FriendRequestService {
 
     private final FriendRequestRepository friendRequestRepository;
     private final UserRepository userRepository;
-
-    public FriendRequestService(final FriendRequestRepository friendRequestRepository,
-            final UserRepository userRepository) {
-        this.friendRequestRepository = friendRequestRepository;
-        this.userRepository = userRepository;
-    }
+    private final FriendRequestMapper friendRequestMapper;
 
     public List<FriendRequestDTO> findAll() {
         final List<FriendRequest> friendRequests = friendRequestRepository.findAll(Sort.by("id"));
@@ -58,6 +56,13 @@ public class FriendRequestService {
                 .orElseThrow(NotFoundException::new);
         friendRequestRepository.delete(friendRequest);
     }
+    public List<FriendRequestDTO> GetAllByAcceptedFriendRequests(final Integer receiverId) {
+        return friendRequestRepository.findAcceptedFriendRequests(receiverId, "accepted")
+                .stream()
+                .map(friendRequestMapper::friendRequestToFriendRequestDTO)
+                .toList();
+    }
+
 
     private FriendRequestDTO mapToDTO(final FriendRequest friendRequest,
             final FriendRequestDTO friendRequestDTO) {

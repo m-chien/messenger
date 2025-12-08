@@ -16,8 +16,8 @@ public class ChatController {
     // Khi client gửi tin nhắn đến /app/chat.send
     @MessageMapping("/chat.send/{roomId}")
     @SendTo("/topic/chatroom/{roomId}") // server gửi lại cho tất cả client
-    public MessageDTO sendMessage(@DestinationVariable Integer idroom,  MessageDTO message) {
-        System.out.println("💬 Received: " + message.getContent() + " in room " + idroom);
+    public MessageDTO sendMessage(@DestinationVariable Integer roomId,  MessageDTO message) {
+        System.out.println("💬 Received: " + message.getContent() + " in room " + roomId);
         messageService.create(message);
         return message;
     }

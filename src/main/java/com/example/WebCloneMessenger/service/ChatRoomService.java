@@ -1,6 +1,7 @@
 package com.example.WebCloneMessenger.service;
 
 import com.example.WebCloneMessenger.DTO.ChatRoomDTO;
+import com.example.WebCloneMessenger.DTO.ChatRoomProjection;
 import com.example.WebCloneMessenger.Model.ChatRoom;
 import com.example.WebCloneMessenger.Model.Message;
 import com.example.WebCloneMessenger.Model.User;
@@ -35,12 +36,12 @@ public class ChatRoomService {
 
     public List<ChatRoomDTO> findAll() {
         final List<ChatRoom> chatRooms = chatRoomRepository.findAll(Sort.by("id"));
-        return chatRooms.stream().map(chatRoomMapper::toDTO)
+        return chatRooms.stream().map(chatRoomMapper::toDto)
                 .toList();
     }
 
     public ChatRoomDTO get(final Integer id) {
-        return chatRoomRepository.findById(id).map(chatRoomMapper::toDTO)
+        return chatRoomRepository.findById(id).map(chatRoomMapper::toDto)
                 .orElseThrow(NotFoundException::new);
     }
 
@@ -78,16 +79,8 @@ public class ChatRoomService {
         chatRoomRepository.delete(chatRoom);
     }
 
-    private ChatRoomDTO mapToDTO(final ChatRoom chatRoom, final ChatRoomDTO chatRoomDTO) {
-        chatRoomDTO.setId(chatRoom.getId());
-        chatRoomDTO.setName(chatRoom.getName());
-        chatRoomDTO.setLogo(chatRoom.getLogo());
-        chatRoomDTO.setBackground(chatRoom.getBackground());
-        chatRoomDTO.setIcon(chatRoom.getIcon());
-        chatRoomDTO.setType(chatRoom.getType());
-        chatRoomDTO.setCreator(chatRoom.getCreator() == null ? null : chatRoom.getCreator().getId());
-        chatRoomDTO.setLastMessage(chatRoom.getLastMessage() == null ? null : chatRoom.getLastMessage().getId());
-        return chatRoomDTO;
+    public List<ChatRoomProjection> getChatRoomsForUser(Integer userId) {
+        return chatRoomRepository.findChatRoomsWithLastMessage(userId);
     }
 
     private ChatRoom mapToEntity(final ChatRoomDTO chatRoomDTO, final ChatRoom chatRoom) {

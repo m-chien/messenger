@@ -32,7 +32,7 @@ public class Attachment {
             name = "primary_sequence",
             sequenceName = "primary_sequence",
             allocationSize = 1,
-            initialValue = 21
+            initialValue = 100
     )
     @GeneratedValue(
             strategy = GenerationType.SEQUENCE,
@@ -55,13 +55,5 @@ public class Attachment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "IDMessage", nullable = false)
     private Message idmessage;
-
-    @CreatedDate
-    @Column(nullable = false, updatable = false, columnDefinition = "datetime2")
-    private OffsetDateTime dateCreated;
-
-    @LastModifiedDate
-    @Column(nullable = false, columnDefinition = "datetime2")
-    private OffsetDateTime lastUpdated;
 
 }

@@ -1,5 +1,6 @@
 package com.example.WebCloneMessenger.Model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -20,7 +21,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 
 @Entity
-@Table(name = "User")
+@Table(name = "[User]")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
@@ -32,7 +33,7 @@ public class User {
             name = "primary_sequence",
             sequenceName = "primary_sequence",
             allocationSize = 1,
-            initialValue = 21
+            initialValue = 100
     )
     @GeneratedValue(
             strategy = GenerationType.SEQUENCE,
@@ -58,7 +59,7 @@ public class User {
     @OneToMany(mappedBy = "creator")
     private Set<ChatRoom> creatorChatRooms = new HashSet<>();
 
-    @OneToMany(mappedBy = "iduser")
+    @OneToMany(mappedBy = "idUser")
     private Set<Message> iduserMessages = new HashSet<>();
 
     @OneToMany(mappedBy = "iduser")
@@ -68,9 +69,11 @@ public class User {
     private Set<Reaction> iduserReactions = new HashSet<>();
 
     @OneToMany(mappedBy = "receiver")
+    @JsonIgnore
     private Set<FriendRequest> receiverFriendRequests = new HashSet<>();
 
     @OneToMany(mappedBy = "sender")
+    @JsonIgnore
     private Set<FriendRequest> senderFriendRequests = new HashSet<>();
 
     @OneToMany(mappedBy = "blocker")
@@ -78,13 +81,4 @@ public class User {
 
     @OneToMany(mappedBy = "blocked")
     private Set<BlockList> blockedBlockLists = new HashSet<>();
-
-    @CreatedDate
-    @Column(nullable = false, updatable = false, columnDefinition = "datetime2")
-    private OffsetDateTime dateCreated;
-
-    @LastModifiedDate
-    @Column(nullable = false, columnDefinition = "datetime2")
-    private OffsetDateTime lastUpdated;
-
 }

@@ -37,7 +37,7 @@ public class Message {
             name = "primary_sequence",
             sequenceName = "primary_sequence",
             allocationSize = 1,
-            initialValue = 21
+            initialValue = 100
     )
     @GeneratedValue(
             strategy = GenerationType.SEQUENCE,
@@ -85,4 +85,5 @@ public class Message {
 
     @OneToMany(mappedBy = "message")
     private Set<Reaction> messageReactions = new HashSet<>();
+
 }

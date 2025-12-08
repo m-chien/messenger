@@ -30,7 +30,6 @@ public class MessageService {
     private final UserRepository userRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final ApplicationEventPublisher publisher;
-    private final MessageService messageService;
     private final MessageMapper messageMapper;
 
 
@@ -48,12 +47,12 @@ public class MessageService {
     public Integer create(final MessageDTO messageDTO) {
         Message message = messageMapper.toEntity(messageDTO);
 
-        if (messageDTO.getIduser() == null) {
+        if (messageDTO.getIdUser() == null) {
             throw new IllegalArgumentException("User is required");
         }
-        User user = userRepository.findById(messageDTO.getIduser())
+        User user = userRepository.findById(messageDTO.getIdUser())
                 .orElseThrow(() -> new NotFoundException("User not found"));
-        message.setIduser(user);
+        message.setIdUser(user);
 
         if (messageDTO.getChatroom() == null) {
             throw new IllegalArgumentException("Chatroom is required");
@@ -83,10 +82,10 @@ public class MessageService {
         message.setContent(updated.getContent());
         message.setIsPin(updated.getIsPin());
 
-        if (messageDTO.getIduser() != null) {
-            User user = userRepository.findById(messageDTO.getIduser())
+        if (messageDTO.getIdUser() != null) {
+            User user = userRepository.findById(messageDTO.getIdUser())
                     .orElseThrow(() -> new NotFoundException("iduser not found"));
-            message.setIduser(user);
+            message.setIdUser(user);
         }
 
         if (messageDTO.getChatroom() != null) {
@@ -114,7 +113,7 @@ public class MessageService {
     @EventListener(BeforeDeleteUser.class)
     public void on(final BeforeDeleteUser event) {
         final ReferencedException referencedException = new ReferencedException();
-        final Message iduserMessage = messageRepository.findFirstByIduserId(event.getId());
+        final Message iduserMessage = messageRepository.findFirstByIdUserId(event.getId());
         if (iduserMessage != null) {
             referencedException.setKey("user.message.iduser.referenced");
             referencedException.addParam(iduserMessage.getId());

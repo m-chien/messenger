@@ -1,6 +1,7 @@
 package com.example.WebCloneMessenger.Controller;
 
 import com.example.WebCloneMessenger.DTO.FriendRequestDTO;
+import com.example.WebCloneMessenger.Model.FriendRequest;
 import com.example.WebCloneMessenger.service.FriendRequestService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -52,4 +53,9 @@ public class FriendRequestResource {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/friendRequestsForUser")
+    public ResponseEntity<List<FriendRequestDTO>> getFriendRequestsForUser(
+            @RequestParam(name = "userId") final Integer userId) {
+        return ResponseEntity.ok(friendRequestService.GetAllByAcceptedFriendRequests(userId));
+    }
 }
