@@ -1,28 +1,33 @@
-import { useState } from "react";
 import {
-  Search,
+  HelpCircle,
+  Image,
+  Info,
+  Mic,
+  Moon,
   MoreHorizontal,
   Phone,
-  Video,
-  Info,
-  Smile,
-  Image,
-  Mic,
+  Search,
   Send,
   Settings,
-  Users,
-  UserPlus,
-  UserX,
   Shield,
-  HelpCircle,
+  Smile,
+  Sun,
+  UserPlus,
+  Users,
+  UserX,
+  Video,
 } from "lucide-react";
-
+import { useEffect, useState } from "react";
 import "./App.css";
+import { useTheme } from "./Component/ThemeContext.jsx";
+import useFetchAll from "./Hook/useFetchAll";
+import { ConversationItem } from "./Page/ConversationItem";
 
 function App() {
-  const [selectedChat, setSelectedChat] = useState("1");
+  const [selectedChat, setSelectedChat] = useState(null);
   const [messageInput, setMessageInput] = useState("");
   const [showMenu, setShowMenu] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   const toggleMenu = () => {
     setShowMenu(!showMenu);
@@ -31,34 +36,14 @@ function App() {
   const closeMenu = () => {
     setShowMenu(false);
   };
+  const { data: chatRooms, loading } = useFetchAll("/chatRooms/user/1");
+  console.log("🚀 ~ App ~ chatRooms:", chatRooms);
 
-  const conversations = [
-    {
-      id: "1",
-      name: "Nguyen Van A",
-      avatar:
-        "https://images.pexels.com/photos/1587009/pexels-photo-1587009.jpeg?auto=compress&cs=tinysrgb&w=100",
-      lastMessage: "Hey, how are you?",
-      timestamp: "2m ago",
-      unread: true,
-    },
-    {
-      id: "2",
-      name: "Tran Thi B",
-      avatar:
-        "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=100",
-      lastMessage: "See you tomorrow!",
-      timestamp: "1h ago",
-    },
-    {
-      id: "3",
-      name: "Le Van C",
-      avatar:
-        "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100",
-      lastMessage: "Thanks for your help",
-      timestamp: "3h ago",
-    },
-  ];
+  useEffect(() => {
+    if (chatRooms && chatRooms.length > 0 && !selectedChat) {
+      setSelectedChat(chatRooms[0].idChatroom);
+    }
+  }, [chatRooms]);
 
   const messages = [
     {
@@ -76,7 +61,7 @@ function App() {
     {
       id: "3",
       sender: "other",
-      text: "Doing great! Want to grab coffee later?",
+      text: "Doing great! Want to grab coffee later? ☕",
       timestamp: "10:35 AM",
     },
     {
@@ -92,40 +77,50 @@ function App() {
       {/* Sidebar */}
       <div className="sidebar">
         <div className="sidebar-header">
-          <h1>Chats</h1>
-          <div className="menu-container">
-            <button className="icon-btn" onClick={toggleMenu}>
-              <MoreHorizontal size={20} />
+          <h1>Inbox</h1>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <button
+              className="icon-btn theme-toggle"
+              onClick={toggleTheme}
+              title="Đổi chế độ sáng/tối"
+            >
+              {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
             </button>
 
-            {showMenu && (
-              <div className="dropdown-menu">
-                <button onClick={closeMenu}>
-                  <Settings size={18} />
-                  <span>Tùy chọn</span>
-                </button>
-                <button>
-                  <Users size={18} />
-                  <span>Danh sách bạn bè</span>
-                </button>
-                <button>
-                  <UserPlus size={18} />
-                  <span>Kết bạn</span>
-                </button>
-                <button>
-                  <UserX size={18} />
-                  <span>Tài khoản đã hạn chế</span>
-                </button>
-                <button>
-                  <Shield size={18} />
-                  <span>Quyền riêng tư và an toàn</span>
-                </button>
-                <button>
-                  <HelpCircle size={18} />
-                  <span>Trợ giúp</span>
-                </button>
-              </div>
-            )}
+            <div className="menu-container">
+              <button className="icon-btn" onClick={toggleMenu}>
+                <MoreHorizontal size={20} />
+              </button>
+
+              {showMenu && (
+                <div className="dropdown-menu">
+                  <button className="menu-item" type="button">
+                    <Settings size={18} />
+                    <span>Tùy chọn</span>
+                  </button>
+                  <button>
+                    <Users size={18} />
+                    <span>Danh sách bạn bè</span>
+                  </button>
+                  <button>
+                    <UserPlus size={18} />
+                    <span>Kết bạn</span>
+                  </button>
+                  <button>
+                    <UserX size={18} />
+                    <span>Tài khoản đã hạn chế</span>
+                  </button>
+                  <button>
+                    <Shield size={18} />
+                    <span>Quyền riêng tư và an toàn</span>
+                  </button>
+                  <button>
+                    <HelpCircle size={18} />
+                    <span>Trợ giúp</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -135,29 +130,13 @@ function App() {
         </div>
 
         <div className="conversation-list">
-          {conversations.map((conv) => (
-            <div
-              key={conv.id}
-              onClick={() => setSelectedChat(conv.id)}
-              className={`conversation-item ${
-                selectedChat === conv.id ? "active" : ""
-              }`}
-            >
-              <div className="avatar">
-                <img src={conv.avatar} alt={conv.name} />
-                <span className="online-dot"></span>
-              </div>
-              <div className="conversation-text">
-                <div className="conversation-header">
-                  <h3>{conv.name}</h3>
-                  <span>{conv.timestamp}</span>
-                </div>
-                <p className={conv.unread ? "unread" : ""}>
-                  {conv.lastMessage}
-                </p>
-              </div>
-              {conv.unread && <div className="unread-dot"></div>}
-            </div>
+          {chatRooms.map((conv) => (
+            <ConversationItem
+              key={conv.idChatroom}
+              conv={conv}
+              selectedChat={selectedChat}
+              setSelectedChat={setSelectedChat}
+            />
           ))}
         </div>
       </div>
