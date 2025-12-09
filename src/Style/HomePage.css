@@ -251,9 +251,13 @@ h2 {
 
 .message {
   display: flex;
-  flex-direction: column;
-  margin-bottom: 12px;
+  align-items: flex-start;
+  margin-bottom: 5px;
   animation: slideIn 0.3s ease;
+  gap: 8px;
+}
+.message img {
+  margin-top: 5px;
 }
 
 @keyframes slideIn {
@@ -269,12 +273,27 @@ h2 {
 
 .message.other {
   align-self: flex-start;
-  align-items: flex-start;
+  justify-content: flex-start;
 }
 
 .message.me {
   align-self: flex-end;
-  align-items: flex-end;
+  justify-content: flex-end;
+  flex-direction: row-reverse;
+}
+
+.message-avatar {
+  width: 37px;
+  height: 37px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.message-content {
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
 
 .message-bubble {
@@ -284,7 +303,7 @@ h2 {
   color: var(--text-color);
   word-wrap: break-word;
   word-break: break-word;
-  font-size: 17px;
+  font-size: 13px;
   line-height: 1.4;
   max-width: 300px;
 }
@@ -295,9 +314,26 @@ h2 {
 }
 
 .timestamp {
+  position: absolute;
+  right: -45px;
+  top: 50%;
+  transform: translateY(-50%);
   font-size: 12px;
   color: #999;
-  margin-top: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.message:hover .timestamp {
+  opacity: 1;
+}
+
+
+.avatar-wrapper {
+  width: 37px; /* đúng bằng kích thước avatar */
+  height: 37px;
+  flex-shrink: 0;
 }
 
 .chat-input {
