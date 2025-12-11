@@ -1,8 +1,11 @@
 import { Zap } from "lucide-react";
 import React, { useState } from "react";
 import "../Style/AuthForm.css";
+import { useNavigate } from "react-router-dom";
+import { User } from "../Api/User.js";
 
 export const LoginPage = ({ onLoginSuccess, onSwitchToRegister }) => {
+  const naviagte = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -25,20 +28,10 @@ export const LoginPage = ({ onLoginSuccess, onSwitchToRegister }) => {
         setLoading(false);
         return;
       }
-
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      const userData = {
-        id: "1",
-        name: "Người dùng",
-        email: email,
-        avatar:
-          "https://images.pexels.com/photos/1587009/pexels-photo-1587009.jpeg?auto=compress&cs=tinysrgb&w=100",
-      };
-
-      localStorage.setItem("user", JSON.stringify(userData));
-      onLoginSuccess(userData);
+      const userData = await User().login(email, password);
+      naviagte("/");
     } catch (err) {
+      console.error("Login failed:", err);
       setError("Đăng nhập thất bại. Vui lòng thử lại.");
     } finally {
       setLoading(false);

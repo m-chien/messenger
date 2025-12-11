@@ -20,13 +20,13 @@ export const ConversationItem = ({ conv, selectedChat, setSelectedChat }) => {
   return (
     <div
       key={conv.idChatroom}
-      onClick={() => setSelectedChat(conv.idChatroom)}
+      onClick={() => setSelectedChat(conv)}
       className={`conversation-item ${
         selectedChat === conv.idChatroom ? "active" : ""
       }`}
     >
       <div className="avatar">
-        <img src={conv.logo} alt={conv.name} />
+        <img src={`http://localhost:8080${conv.logo}`} alt={conv.name} />
         {conv.hasOnlineUser == 1 && <span className="online-dot"></span>}
       </div>
       <div className="conversation-text">

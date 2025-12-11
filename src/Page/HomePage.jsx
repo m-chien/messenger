@@ -19,16 +19,40 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import "./../Style/HomePage.css";
-import { format } from "date-fns";
+import { format, isToday } from "date-fns";
+import { vi } from "date-fns/locale";
 import { useTheme } from "./../Component/ThemeContext.jsx";
+import { useChatWebSocket } from "../Hook/useChatWebSocket.js";
 import useFetchAll from "../Hook/useFetchAll";
 import { ConversationItem } from "./../Page/ConversationItem";
 
 function HomePage() {
+  const token = sessionStorage.getItem("accessToken");
   const [selectedChat, setSelectedChat] = useState(null);
   const [messageInput, setMessageInput] = useState("");
   const [showMenu, setShowMenu] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const { data: chatRooms, loading: chatRoomsLoading } =
+    useFetchAll("/chatRooms/user");
+  const { data: messagesData, loading: messagesLoading } = useFetchAll(
+    selectedChat ? `/messages/chatroom/${selectedChat.idChatroom}` : null,
+  );
+  const { messages, sendMessage, connected } = useChatWebSocket(
+    selectedChat?.idChatroom,
+    token,
+  );
+  const AllMessages = [...messagesData, ...messages];
+
+  const handleSendMessage = () => {
+    console.log("Sending message:", messageInput);
+    console.log("Selected chat:", selectedChat);
+    sendMessage({
+      content: messageInput,
+      dateSend: new Date().toISOString(),
+      chatroom: selectedChat.idChatroom,
+    });
+    setMessageInput("");
+  };
 
   const toggleMenu = () => {
     setShowMenu(!showMenu);
@@ -36,23 +60,33 @@ function HomePage() {
 
   const formatTimeWithLibrary = (isoString) => {
     if (!isoString) return "";
+    const date = new Date(isoString);
 
-    // 'HH:mm' là chuỗi định dạng (HH=Giờ 24h, mm=Phút)
-    return format(new Date(isoString), "HH:mm");
+    if (isToday(date)) {
+      return format(date, "HH:mm");
+    } else {
+      return format(date, "HH:mm d MMM, yyyy", { locale: vi });
+    }
   };
-
-  const { data: chatRooms, loading: chatRoomsLoading } =
-    useFetchAll("/chatRooms/user/1");
-  const { data: messagesData, loading: messagesLoading } = useFetchAll(
-    `/messages/chatroom/${selectedChat}`,
-  );
-  console.log("🚀 ~ HomePage ~ messagesData:", messagesData);
 
   useEffect(() => {
     if (chatRooms && chatRooms.length > 0 && !selectedChat) {
-      setSelectedChat(chatRooms[0].idChatroom);
+      setSelectedChat(chatRooms[0]);
     }
   }, [chatRooms]);
+
+  const handleChatRoomSelect = (chatroom) => {
+    setSelectedChat(chatroom);
+  };
+
+  const getMyUserId = () => {
+    const token = sessionStorage.getItem("accessToken");
+    if (!token) return null;
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    return Number(payload.sub);
+  };
+
+  const myUserId = getMyUserId();
 
   return (
     <div className="messenger">
@@ -116,8 +150,8 @@ function HomePage() {
             <ConversationItem
               key={conv.idChatroom}
               conv={conv}
-              selectedChat={selectedChat}
-              setSelectedChat={setSelectedChat}
+              selectedChat={selectedChat?.idChatroom}
+              setSelectedChat={() => handleChatRoomSelect(conv)}
             />
           ))}
         </div>
@@ -128,11 +162,11 @@ function HomePage() {
         <div className="chat-header">
           <div className="chat-user">
             <img
-              src="https://images.pexels.com/photos/1587009/pexels-photo-1587009.jpeg?auto=compress&cs=tinysrgb&w=100"
+              src={`http://localhost:8080${selectedChat?.logo}`}
               alt="User"
             />
             <div>
-              <h2>Nguyen Van A</h2>
+              <h2>{selectedChat?.name}</h2>
               <p className="active-text">Active now</p>
             </div>
           </div>
@@ -150,17 +184,20 @@ function HomePage() {
         </div>
 
         <div className="chat-messages">
-          {messagesData.map((msg, index) => {
-            const nextMsg = messagesData[index + 1];
-            const isMe = msg.userId === 1;
+          {AllMessages.map((msg, index) => {
+            const nextMsg = AllMessages[index + 1];
+            const isMe = Number(msg.userId) === myUserId;
             const showAvatar = !nextMsg || nextMsg.userId !== msg.userId;
 
             return (
-              <div key={msg.id} className={`message ${isMe ? "me" : "other"}`}>
+              <div
+                key={msg.id || index}
+                className={`message ${isMe ? "me" : "other"}`}
+              >
                 <div className="avatar-wrapper">
                   {!isMe && showAvatar && (
                     <img
-                      src="/images.png"
+                      src={`http://localhost:8080${msg.avatarUrl}`}
                       alt="User"
                       className="message-avatar"
                     />
@@ -185,14 +222,25 @@ function HomePage() {
           <button className="icon-btn">
             <Smile size={20} />
           </button>
-          <input
-            type="text"
+          <textarea
+            className="input"
             placeholder="Aa"
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (
+                e.key === "Enter" &&
+                !e.shiftKey &&
+                messageInput.trim() !== ""
+              ) {
+                e.preventDefault(); // tránh xuống dòng
+                handleSendMessage();
+              }
+            }}
+            rows={1}
           />
           {messageInput.trim() ? (
-            <button className="icon-btn send-btn">
+            <button className="icon-btn send-btn" onClick={handleSendMessage}>
               <Send size={20} />
             </button>
           ) : (

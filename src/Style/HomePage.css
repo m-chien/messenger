@@ -303,7 +303,7 @@ h2 {
   color: var(--text-color);
   word-wrap: break-word;
   word-break: break-word;
-  font-size: 13px;
+  font-size: 15px;
   line-height: 1.4;
   max-width: 300px;
 }
@@ -329,7 +329,6 @@ h2 {
   opacity: 1;
 }
 
-
 .avatar-wrapper {
   width: 37px; /* đúng bằng kích thước avatar */
   height: 37px;
@@ -345,40 +344,40 @@ h2 {
   background-color: var(--sidebar-bg);
 }
 
-.chat-input input {
+.chat-input .input {
   flex: 1;
   border: 1px solid var(--border-color, #e5e5e5);
   border-radius: 20px;
   background-color: #f0f0f0;
   padding: 12px 16px;
   outline: none;
-  font-size: 13px;
+  font-size: 15px;
   color: var(--text-color);
   transition: border-color 0.2s;
   max-height: 100px;
   resize: none;
 }
 
-.chat-input input::placeholder {
+.chat-input .input::placeholder {
   color: #999;
 }
 
-.chat-input input:focus {
+.chat-input .input:focus {
   border-color: #1877f2;
   background-color: #ffffff;
 }
 
-[data-theme="dark"] .chat-input input {
+[data-theme="dark"] .chat-input .input {
   background-color: #2a2a2a;
   color: #e4e4e4;
   border-color: #333333;
 }
 
-[data-theme="dark"] .chat-input input::placeholder {
+[data-theme="dark"] .chat-input .input::placeholder {
   color: #777;
 }
 
-[data-theme="dark"] .chat-input input:focus {
+[data-theme="dark"] .chat-input .input:focus {
   border-color: #0084ff;
   background-color: #333333;
 }
