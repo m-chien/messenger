@@ -1,14 +1,18 @@
 package com.example.WebCloneMessenger.DTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-
-@Getter
-@Setter
+@Data  // Bao gồm @Getter, @Setter, @ToString, @EqualsAndHashCode
+@Builder
+@NoArgsConstructor  // QUAN TRỌNG cho Jackson deserialize
+@AllArgsConstructor // QUAN TRỌNG cho Builder
 public class UserDTO {
 
     private Integer id;
@@ -23,6 +27,7 @@ public class UserDTO {
 
     @NotNull
     @Size(max = 255)
+    @JsonIgnore  // KHÔNG trả về password trong response
     private String password;
 
     @JsonProperty("isOnline")
@@ -31,4 +36,6 @@ public class UserDTO {
     @Size(max = 500)
     private String avatarUrl;
 
+    // Thêm role nếu có
+    private String role;
 }

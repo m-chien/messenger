@@ -1,4 +1,4 @@
-package com.example.WebCloneMessenger.util;
+package com.example.WebCloneMessenger.Exception;
 
 import lombok.Getter;
 import lombok.Setter;

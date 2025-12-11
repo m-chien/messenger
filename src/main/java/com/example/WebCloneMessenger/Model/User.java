@@ -29,17 +29,9 @@ public class User {
 
     @Id
     @Column(nullable = false, updatable = false)
-    @SequenceGenerator(
-            name = "primary_sequence",
-            sequenceName = "primary_sequence",
-            allocationSize = 1,
-            initialValue = 100
-    )
-    @GeneratedValue(
-            strategy = GenerationType.SEQUENCE,
-            generator = "primary_sequence"
-    )
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
+
 
     @Column(nullable = false, length = 100)
     private String name;
@@ -81,4 +73,7 @@ public class User {
 
     @OneToMany(mappedBy = "blocked")
     private Set<BlockList> blockedBlockLists = new HashSet<>();
+
+    @Column
+    private String role;
 }

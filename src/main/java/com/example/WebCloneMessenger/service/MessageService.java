@@ -1,6 +1,7 @@
 package com.example.WebCloneMessenger.service;
 
 import com.example.WebCloneMessenger.DTO.MessageDTO;
+import com.example.WebCloneMessenger.DTO.MessageDetailProjection;
 import com.example.WebCloneMessenger.Model.ChatRoom;
 import com.example.WebCloneMessenger.Model.Message;
 import com.example.WebCloneMessenger.Model.User;
@@ -11,8 +12,8 @@ import com.example.WebCloneMessenger.mapper.MessageMapper;
 import com.example.WebCloneMessenger.repos.ChatRoomRepository;
 import com.example.WebCloneMessenger.repos.MessageRepository;
 import com.example.WebCloneMessenger.repos.UserRepository;
-import com.example.WebCloneMessenger.util.NotFoundException;
-import com.example.WebCloneMessenger.util.ReferencedException;
+import com.example.WebCloneMessenger.Exception.NotFoundException;
+import com.example.WebCloneMessenger.Exception.ReferencedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
@@ -31,6 +32,7 @@ public class MessageService {
     private final ChatRoomRepository chatRoomRepository;
     private final ApplicationEventPublisher publisher;
     private final MessageMapper messageMapper;
+    private final MessageMapper MessageMapper;
 
 
     public List<MessageDTO> findAll() {
@@ -47,10 +49,10 @@ public class MessageService {
     public Integer create(final MessageDTO messageDTO) {
         Message message = messageMapper.toEntity(messageDTO);
 
-        if (messageDTO.getIdUser() == null) {
-            throw new IllegalArgumentException("User is required");
+        if (messageDTO.getUserId() == null) {
+            throw new IllegalArgumentException("Không có IDUser");
         }
-        User user = userRepository.findById(messageDTO.getIdUser())
+        User user = userRepository.findById(messageDTO.getUserId())
                 .orElseThrow(() -> new NotFoundException("User not found"));
         message.setIdUser(user);
 
@@ -82,8 +84,8 @@ public class MessageService {
         message.setContent(updated.getContent());
         message.setIsPin(updated.getIsPin());
 
-        if (messageDTO.getIdUser() != null) {
-            User user = userRepository.findById(messageDTO.getIdUser())
+        if (messageDTO.getUserId() != null) {
+            User user = userRepository.findById(messageDTO.getUserId())
                     .orElseThrow(() -> new NotFoundException("iduser not found"));
             message.setIdUser(user);
         }
@@ -99,7 +101,7 @@ public class MessageService {
                     .orElseThrow(() -> new NotFoundException("replyMessage not found"));
             message.setReplyMessage(replyMsg);
         }
-
+        message.setType("text");
         messageRepository.save(message);
     }
 
@@ -108,6 +110,10 @@ public class MessageService {
                 .orElseThrow(NotFoundException::new);
         publisher.publishEvent(new BeforeDeleteMessage(id));
         messageRepository.delete(message);
+    }
+
+    public List<MessageDetailProjection> findByChatRoomId(final Integer chatRoomId) {
+        return messageRepository.findMessageDetailsByChatRoomId(chatRoomId);
     }
 
     @EventListener(BeforeDeleteUser.class)
@@ -143,4 +149,7 @@ public class MessageService {
         }
     }
 
+    public MessageDetailProjection findMessageDetailById(int idNewMessage) {
+        return messageRepository.findMessageDetailById(idNewMessage);
+    }
 }

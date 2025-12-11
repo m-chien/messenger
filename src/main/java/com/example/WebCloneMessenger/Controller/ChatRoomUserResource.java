@@ -12,7 +12,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping(value = "/api/chatRoomUsers", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/chatRoomUsers", produces = MediaType.APPLICATION_JSON_VALUE)
 public class ChatRoomUserResource {
 
     private final ChatRoomUserService chatRoomUserService;
@@ -33,9 +33,9 @@ public class ChatRoomUserResource {
     }
 
     @PostMapping
-    public ResponseEntity<Long> createChatRoomUser(
+    public ResponseEntity<Integer> createChatRoomUser(
             @RequestBody @Valid final ChatRoomUserDTO chatRoomUserDTO) {
-        final Long createdId = chatRoomUserService.create(chatRoomUserDTO);
+        final Integer createdId = chatRoomUserService.create(chatRoomUserDTO);
         return new ResponseEntity<>(createdId, HttpStatus.CREATED);
     }
 

@@ -8,13 +8,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 
 @RestController
-@RequestMapping(value = "/api/chatRooms", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/chatRooms", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 public class ChatRoomResource {
 
@@ -50,9 +51,8 @@ public class ChatRoomResource {
         return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ChatRoomProjection>> getChatRooms(
-            @PathVariable Integer userId) {
-        return ResponseEntity.ok(chatRoomService.getChatRoomsForUser(userId));
+    @GetMapping("/user")
+    public ResponseEntity<List<ChatRoomProjection>> getChatRooms(Authentication authentication) {
+        return ResponseEntity.ok(chatRoomService.getChatRoomsForUser(Integer.parseInt(authentication.getName())));
     }
 }

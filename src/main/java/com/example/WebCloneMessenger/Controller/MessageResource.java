@@ -1,6 +1,7 @@
 package com.example.WebCloneMessenger.Controller;
 
 import com.example.WebCloneMessenger.DTO.MessageDTO;
+import com.example.WebCloneMessenger.DTO.MessageDetailProjection;
 import com.example.WebCloneMessenger.service.MessageService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -12,7 +13,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping(value = "/api/messages", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/messages", produces = MediaType.APPLICATION_JSON_VALUE)
 public class MessageResource {
 
     private final MessageService messageService;
@@ -50,4 +51,8 @@ public class MessageResource {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/chatroom/{chatRoomId}")
+    public ResponseEntity<List<MessageDetailProjection>> getMessagesByChatRoom(@PathVariable(name = "chatRoomId") final Integer chatRoomId) {
+        return ResponseEntity.ok(messageService.findByChatRoomId(chatRoomId));
+    }
 }

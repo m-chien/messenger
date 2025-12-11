@@ -12,8 +12,8 @@ import com.example.WebCloneMessenger.repos.ChatRoomRepository;
 import com.example.WebCloneMessenger.repos.ChatRoomUserRepository;
 import com.example.WebCloneMessenger.repos.MessageRepository;
 import com.example.WebCloneMessenger.repos.UserRepository;
-import com.example.WebCloneMessenger.util.NotFoundException;
-import com.example.WebCloneMessenger.util.ReferencedException;
+import com.example.WebCloneMessenger.Exception.NotFoundException;
+import com.example.WebCloneMessenger.Exception.ReferencedException;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -51,7 +51,7 @@ public class ChatRoomUserService {
                 .orElseThrow(NotFoundException::new);
     }
 
-    public Long create(final ChatRoomUserDTO chatRoomUserDTO) {
+    public Integer create(final ChatRoomUserDTO chatRoomUserDTO) {
         final ChatRoomUser chatRoomUser = new ChatRoomUser();
         mapToEntity(chatRoomUserDTO, chatRoomUser);
         return chatRoomUserRepository.save(chatRoomUser).getId();

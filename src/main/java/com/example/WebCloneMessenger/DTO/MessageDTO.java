@@ -30,7 +30,7 @@ public class MessageDTO {
     private Boolean isPin;
 
     @NotNull
-    private Integer idUser;
+    private Integer userId;
 
     @NotNull
     private Integer chatroom;

@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 public class ChatRoomUserDTO {
 
-    private Long id;
+    private Integer id;
 
     @NotNull
     private Integer iduser;

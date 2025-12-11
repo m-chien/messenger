@@ -7,7 +7,7 @@ import com.example.WebCloneMessenger.Model.*;
 public interface MessageMapper {
 
     // Lấy id từ các quan hệ (User, ChatRoom, Message)
-    @Mapping(target = "idUser", expression = "java(message.getIdUser() != null ? message.getIdUser().getId() : null)")
+    @Mapping(target = "userId", expression = "java(message.getIdUser() != null ? message.getIdUser().getId() : null)")
     @Mapping(target = "chatroom", expression = "java(message.getChatroom() != null ? message.getChatroom().getId() : null)")
     @Mapping(target = "replyMessage", expression = "java(message.getReplyMessage() != null ? message.getReplyMessage().getId() : null)")
     MessageDTO toDto(Message message);
