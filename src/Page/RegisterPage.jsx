@@ -1,8 +1,9 @@
 import { Zap } from "lucide-react";
 import React, { useState } from "react";
 import "../Style/AuthForm.css";
+import { useNavigate } from "react-router-dom";
 
-export const RegisterPage = ({ onRegisterSuccess, onSwitchToLogin }) => {
+export const RegisterPage = ({ onSwitchToLogin }) => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -95,15 +96,9 @@ export const RegisterPage = ({ onRegisterSuccess, onSwitchToLogin }) => {
     <div className="auth-container">
       <div className="auth-left">
         <div className="auth-left-content">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginBottom: "20px",
-            }}
-          >
-            <Zap size={48} style={{ color: "#fff" }} />
-            <h2 style={{ margin: "0 0 0 15px" }}>ChatHub</h2>
+          <div className="brand-wrapper">
+            <Zap size={48} className="brand-icon" />
+            <h2 className="brand-name">ChatHub</h2>
           </div>
           <p className="subtitle">
             Tạo tài khoản ChatHub ngay để bắt đầu cuộc trò chuyện tuyệt vời.
@@ -215,13 +210,12 @@ export const RegisterPage = ({ onRegisterSuccess, onSwitchToLogin }) => {
             <span>hoặc đăng ký bằng</span>
           </div>
 
-          <button
-            className="form-button"
-            style={{
-              background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-              marginTop: "8px",
-            }}
-          >
+          <button className="form-button google-btn">
+            <img 
+              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" 
+              alt="Google" 
+              style={{ width: '20px', height: '20px' }} 
+            />
             Google
           </button>
 
@@ -232,22 +226,22 @@ export const RegisterPage = ({ onRegisterSuccess, onSwitchToLogin }) => {
           <div
             style={{
               fontSize: "12px",
-              color: "#65676b",
+              color: "rgba(255, 255, 255, 0.5)",
               marginTop: "20px",
               textAlign: "center",
               lineHeight: "1.6",
             }}
           >
             Bằng cách đăng ký, bạn đồng ý với{" "}
-            <a href="#" style={{ color: "#667eea", textDecoration: "none" }}>
+            <a href="#" style={{ color: "#a78bfa", textDecoration: "none" }}>
               Điều khoản
             </a>
             ,{" "}
-            <a href="#" style={{ color: "#667eea", textDecoration: "none" }}>
+            <a href="#" style={{ color: "#a78bfa", textDecoration: "none" }}>
               Chính sách dữ liệu
             </a>{" "}
             và{" "}
-            <a href="#" style={{ color: "#667eea", textDecoration: "none" }}>
+            <a href="#" style={{ color: "#a78bfa", textDecoration: "none" }}>
               Chính sách cookie
             </a>
             .

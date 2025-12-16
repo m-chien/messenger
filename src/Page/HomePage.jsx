@@ -44,11 +44,8 @@ function HomePage() {
   const AllMessages = [...messagesData, ...messages];
 
   const handleSendMessage = () => {
-    console.log("Sending message:", messageInput);
-    console.log("Selected chat:", selectedChat);
     sendMessage({
       content: messageInput,
-      dateSend: new Date().toISOString(),
       chatroom: selectedChat.idChatroom,
     });
     setMessageInput("");
@@ -186,31 +183,44 @@ function HomePage() {
         <div className="chat-messages">
           {AllMessages.map((msg, index) => {
             const nextMsg = AllMessages[index + 1];
+            const preMsg = AllMessages[index - 1];
             const isMe = Number(msg.userId) === myUserId;
             const showAvatar = !nextMsg || nextMsg.userId !== msg.userId;
+            const showTime =
+              !preMsg ||
+              new Date(msg.dateSend).getTime() -
+                new Date(preMsg.dateSend).getTime() >
+                10 * 60 * 1000;
 
             return (
-              <div
-                key={msg.id || index}
-                className={`message ${isMe ? "me" : "other"}`}
-              >
-                <div className="avatar-wrapper">
-                  {!isMe && showAvatar && (
-                    <img
-                      src={`http://localhost:8080${msg.avatarUrl}`}
-                      alt="User"
-                      className="message-avatar"
-                    />
-                  )}
-                </div>
-
-                <div className="message-content">
-                  <div className="message-bubble">{msg.content}</div>
-                  <span className="timestamp">
+              <>
+                {showTime && (
+                  <div className="time">
                     {formatTimeWithLibrary(msg.dateSend)}
-                  </span>
+                  </div>
+                )}
+                <div
+                  key={msg.id || index}
+                  className={`message ${isMe ? "me" : "other"}`}
+                >
+                  <div className="avatar-wrapper">
+                    {!isMe && showAvatar && (
+                      <img
+                        src={`http://localhost:8080${msg.avatarUrl}`}
+                        alt="User"
+                        className="message-avatar"
+                      />
+                    )}
+                  </div>
+
+                  <div className="message-content">
+                    <div className="message-bubble">{msg.content}</div>
+                    <span className="timestamp">
+                      {formatTimeWithLibrary(msg.dateSend)}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              </>
             );
           })}
         </div>

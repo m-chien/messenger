@@ -1,10 +1,10 @@
 import { Zap } from "lucide-react";
 import React, { useState } from "react";
 import "../Style/AuthForm.css";
+import { GoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
-import { User } from "../Api/User.js";
-
-export const LoginPage = ({ onLoginSuccess, onSwitchToRegister }) => {
+import { userService } from "../Hook/userService.js";
+export const LoginPage = ({ onSwitchToRegister }) => {
   const naviagte = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,8 +28,8 @@ export const LoginPage = ({ onLoginSuccess, onSwitchToRegister }) => {
         setLoading(false);
         return;
       }
-      const userData = await User().login(email, password);
-      naviagte("/");
+      const userData = await userService.login(email, password);
+      naviagte("/home");
     } catch (err) {
       console.error("Login failed:", err);
       setError("Đăng nhập thất bại. Vui lòng thử lại.");
@@ -42,15 +42,9 @@ export const LoginPage = ({ onLoginSuccess, onSwitchToRegister }) => {
     <div className="auth-container">
       <div className="auth-left">
         <div className="auth-left-content">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginBottom: "20px",
-            }}
-          >
-            <Zap size={48} style={{ color: "#fff" }} />
-            <h2 style={{ margin: "0 0 0 15px" }}>ChatHub</h2>
+          <div className="brand-wrapper">
+            <Zap size={48} className="brand-icon" />
+            <h2 className="brand-name">ChatHub</h2>
           </div>
           <p className="subtitle">
             Kết nối ngay, trò chuyện vui. Nơi những cuộc hội thoại trở nên ý
@@ -99,7 +93,12 @@ export const LoginPage = ({ onLoginSuccess, onSwitchToRegister }) => {
 
             {error && <div className="form-error">{error}</div>}
 
-            <button type="submit" className="form-button" disabled={loading}>
+            <button
+              type="submit"
+              className="form-button"
+              disabled={loading}
+              onClick={handleLogin}
+            >
               {loading ? "⏳ Đang đăng nhập..." : "🚀 Đăng Nhập"}
             </button>
           </form>
@@ -108,15 +107,17 @@ export const LoginPage = ({ onLoginSuccess, onSwitchToRegister }) => {
             <span>hoặc tiếp tục với</span>
           </div>
 
-          <button
-            className="form-button"
-            style={{
-              background: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-              marginTop: "8px",
+          <GoogleLogin
+            onSuccess={async (res) => {
+              const idToken = res.credential;
+              console.log("ID TOKEN:", idToken);
+              const data = await userService.loginGG(idToken);
+              console.log("🚀 ~ LoginPage ~ data:", data);
             }}
-          >
-            Google
-          </button>
+            onError={() => {
+              console.log("Google Login Failed");
+            }}
+          />
 
           <div className="form-link">
             Chưa có tài khoản?{" "}

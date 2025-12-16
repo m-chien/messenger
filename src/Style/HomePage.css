@@ -270,7 +270,9 @@ h2 {
     transform: translateY(0);
   }
 }
-
+.time {
+  text-align: center;
+}
 .message.other {
   align-self: flex-start;
   justify-content: flex-start;
@@ -292,8 +294,14 @@ h2 {
 
 .message-content {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
   position: relative;
+}
+
+.message.me .message-content {
+  flex-direction: row-reverse;
 }
 
 .message-bubble {
@@ -314,10 +322,6 @@ h2 {
 }
 
 .timestamp {
-  position: absolute;
-  right: -45px;
-  top: 50%;
-  transform: translateY(-50%);
   font-size: 12px;
   color: #999;
   white-space: nowrap;

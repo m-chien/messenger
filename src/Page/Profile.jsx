@@ -62,105 +62,29 @@ export const Profile = ({ userData, onLogout, onUpdateProfile }) => {
   };
 
   return (
-    <div
-      style={{
-        background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        minHeight: "100vh",
-        padding: "40px 20px",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* Animated background */}
-      <div
-        style={{
-          position: "absolute",
-          width: "400px",
-          height: "400px",
-          background: "rgba(255, 255, 255, 0.1)",
-          borderRadius: "50%",
-          top: "-100px",
-          right: "-100px",
-          animation: "float 6s ease-in-out infinite",
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          width: "300px",
-          height: "300px",
-          background: "rgba(255, 255, 255, 0.1)",
-          borderRadius: "50%",
-          bottom: "-50px",
-          left: "-50px",
-          animation: "float 8s ease-in-out infinite reverse",
-        }}
-      />
-
-      <div
-        style={{
-          maxWidth: "900px",
-          margin: "0 auto",
-          backgroundColor: "var(--bg-color)",
-          borderRadius: "20px",
-          overflow: "hidden",
-          boxShadow: "0 20px 60px rgba(102, 126, 234, 0.3)",
-          position: "relative",
-          zIndex: 1,
-        }}
-      >
+    <div className="auth-container">
+      <div className="profile-card">
         {/* Header */}
-        <div
-          style={{
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            padding: "60px 40px",
-            textAlign: "center",
-            color: "white",
-          }}
-        >
-          <div
-            style={{
-              width: "140px",
-              height: "140px",
-              borderRadius: "50%",
-              border: "5px solid white",
-              margin: "0 auto 20px",
-              overflow: "hidden",
-              boxShadow: "0 10px 30px rgba(0, 0, 0, 0.2)",
-            }}
-          >
+        <div className="profile-header">
+          <div className="profile-avatar-container">
             <img
               src={userData?.avatar}
               alt={userData?.name}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-              }}
+              className="profile-avatar"
             />
           </div>
-          <h1
-            style={{ fontSize: "32px", margin: "0 0 5px 0", fontWeight: "900" }}
-          >
+          <h1 className="profile-name">
             {userData?.name || "Người dùng"}
           </h1>
-          <p style={{ margin: "0", opacity: 0.9, fontSize: "14px" }}>
+          <p className="profile-email">
             @{userData?.email?.split("@")[0]}
           </p>
         </div>
 
         {/* Content */}
-        <div style={{ padding: "40px" }}>
-          {error && (
-            <div className="form-error" style={{ marginBottom: "20px" }}>
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="form-success" style={{ marginBottom: "20px" }}>
-              {success}
-            </div>
-          )}
+        <div className="profile-content">
+          {error && <div className="form-error">{error}</div>}
+          {success && <div className="form-success">{success}</div>}
 
           {isEditing ? (
             // Edit Form
@@ -199,6 +123,7 @@ export const Profile = ({ userData, onLogout, onUpdateProfile }) => {
                   value={formData.email}
                   onChange={handleChange}
                   disabled={true}
+                  style={{ opacity: 0.7, cursor: 'not-allowed' }}
                 />
               </div>
 
@@ -222,31 +147,12 @@ export const Profile = ({ userData, onLogout, onUpdateProfile }) => {
                   value={formData.bio}
                   onChange={handleChange}
                   disabled={loading}
-                  style={{
-                    width: "100%",
-                    minHeight: "100px",
-                    padding: "14px 16px",
-                    border: "2px solid var(--border-color, #e5e5e5)",
-                    borderRadius: "12px",
-                    backgroundColor: "var(--chat-bg)",
-                    color: "var(--text-color)",
-                    fontSize: "14px",
-                    fontFamily: "inherit",
-                    boxSizing: "border-box",
-                    resize: "vertical",
-                    transition: "all 0.3s ease",
-                  }}
+                  className="form-control"
                   placeholder="Viết gì đó về bạn..."
-                  onFocus={(e) => {
-                    e.target.style.borderColor = "#667eea";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.borderColor = "var(--border-color, #e5e5e5)";
-                  }}
                 />
               </div>
 
-              <div style={{ display: "flex", gap: "12px", marginTop: "25px" }}>
+              <div className="profile-actions">
                 <button
                   type="submit"
                   className="form-button"
@@ -268,244 +174,68 @@ export const Profile = ({ userData, onLogout, onUpdateProfile }) => {
           ) : (
             // View Profile
             <>
-              <div style={{ marginBottom: "30px" }}>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                    gap: "20px",
-                  }}
-                >
-                  {/* Email Card */}
-                  <div
-                    style={{
-                      padding: "24px",
-                      backgroundColor: "var(--chat-bg)",
-                      borderRadius: "12px",
-                      border: "2px solid var(--border-color, #e5e5e5)",
-                      transition: "all 0.3s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "#667eea";
-                      e.currentTarget.style.boxShadow =
-                        "0 4px 12px rgba(102, 126, 234, 0.2)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor =
-                        "var(--border-color, #e5e5e5)";
-                      e.currentTarget.style.boxShadow = "none";
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        marginBottom: "12px",
-                      }}
-                    >
-                      <Mail
-                        size={20}
-                        style={{ marginRight: "10px", color: "#667eea" }}
-                      />
-                      <span
-                        style={{
-                          fontSize: "12px",
-                          color: "#999",
-                          fontWeight: "700",
-                        }}
-                      >
-                        EMAIL
-                      </span>
-                    </div>
-                    <p
-                      style={{
-                        margin: "0",
-                        fontWeight: "600",
-                        fontSize: "15px",
-                      }}
-                    >
-                      {userData?.email || "Không có"}
-                    </p>
+              <div className="info-grid">
+                {/* Email Card */}
+                <div className="info-card">
+                  <div className="info-header">
+                    <Mail size={16} className="btn-icon" />
+                    EMAIL
                   </div>
+                  <p className="info-value">
+                    {userData?.email || "Không có"}
+                  </p>
+                </div>
 
-                  {/* Phone Card */}
-                  <div
-                    style={{
-                      padding: "24px",
-                      backgroundColor: "var(--chat-bg)",
-                      borderRadius: "12px",
-                      border: "2px solid var(--border-color, #e5e5e5)",
-                      transition: "all 0.3s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "#667eea";
-                      e.currentTarget.style.boxShadow =
-                        "0 4px 12px rgba(102, 126, 234, 0.2)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor =
-                        "var(--border-color, #e5e5e5)";
-                      e.currentTarget.style.boxShadow = "none";
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        marginBottom: "12px",
-                      }}
-                    >
-                      <Phone
-                        size={20}
-                        style={{ marginRight: "10px", color: "#667eea" }}
-                      />
-                      <span
-                        style={{
-                          fontSize: "12px",
-                          color: "#999",
-                          fontWeight: "700",
-                        }}
-                      >
-                        ĐIỆN THOẠI
-                      </span>
-                    </div>
-                    <p
-                      style={{
-                        margin: "0",
-                        fontWeight: "600",
-                        fontSize: "15px",
-                      }}
-                    >
-                      {userData?.phone || "Chưa cập nhật"}
-                    </p>
+                {/* Phone Card */}
+                <div className="info-card">
+                  <div className="info-header">
+                    <Phone size={16} className="btn-icon" />
+                    ĐIỆN THOẠI
                   </div>
+                  <p className="info-value">
+                    {userData?.phone || "Chưa cập nhật"}
+                  </p>
+                </div>
 
-                  {/* Join Date Card */}
-                  <div
-                    style={{
-                      padding: "24px",
-                      backgroundColor: "var(--chat-bg)",
-                      borderRadius: "12px",
-                      border: "2px solid var(--border-color, #e5e5e5)",
-                      transition: "all 0.3s ease",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.borderColor = "#667eea";
-                      e.currentTarget.style.boxShadow =
-                        "0 4px 12px rgba(102, 126, 234, 0.2)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.borderColor =
-                        "var(--border-color, #e5e5e5)";
-                      e.currentTarget.style.boxShadow = "none";
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        marginBottom: "12px",
-                      }}
-                    >
-                      <Calendar
-                        size={20}
-                        style={{ marginRight: "10px", color: "#667eea" }}
-                      />
-                      <span
-                        style={{
-                          fontSize: "12px",
-                          color: "#999",
-                          fontWeight: "700",
-                        }}
-                      >
-                        THAM GIA
-                      </span>
-                    </div>
-                    <p
-                      style={{
-                        margin: "0",
-                        fontWeight: "600",
-                        fontSize: "15px",
-                      }}
-                    >
-                      {new Date().toLocaleDateString("vi-VN")}
-                    </p>
+                {/* Join Date Card */}
+                <div className="info-card">
+                  <div className="info-header">
+                    <Calendar size={16} className="btn-icon" />
+                    THAM GIA
                   </div>
+                  <p className="info-value">
+                    {new Date().toLocaleDateString("vi-VN")}
+                  </p>
                 </div>
               </div>
 
               {userData?.bio && (
-                <div
-                  style={{
-                    marginBottom: "30px",
-                    padding: "24px",
-                    backgroundColor: "var(--chat-bg)",
-                    borderRadius: "12px",
-                    border: "2px solid var(--border-color, #e5e5e5)",
-                  }}
-                >
-                  <h3
-                    style={{
-                      margin: "0 0 12px 0",
-                      fontSize: "14px",
-                      fontWeight: "700",
-                    }}
-                  >
+                <div className="bio-section">
+                  <h3 className="bio-header">
                     💭 Tiểu sử
                   </h3>
-                  <p
-                    style={{ margin: "0", fontSize: "14px", lineHeight: "1.6" }}
-                  >
+                  <p className="bio-text">
                     {userData.bio}
                   </p>
                 </div>
               )}
 
-              <div style={{ display: "flex", gap: "12px" }}>
+              <div className="profile-actions">
                 <button
                   onClick={() => setIsEditing(true)}
                   className="form-button"
-                  style={{
-                    flex: 1,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                  }}
+                  style={{ flex: 1 }}
                 >
-                  <Edit2 size={18} />
+                  <Edit2 size={18} className="btn-icon" />
                   Chỉnh Sửa Hồ Sơ
                 </button>
 
                 <button
                   onClick={onLogout}
-                  style={{
-                    flex: 1,
-                    padding: "14px 20px",
-                    background:
-                      "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "12px",
-                    cursor: "pointer",
-                    fontWeight: "700",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "8px",
-                    transition: "all 0.3s ease",
-                    textTransform: "uppercase",
-                    letterSpacing: "1px",
-                    fontSize: "14px",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                  }}
+                  className="form-button form-button-danger"
+                  style={{ flex: 1 }}
                 >
-                  <LogOut size={18} />
+                  <LogOut size={18} className="btn-icon" />
                   Đăng Xuất
                 </button>
               </div>
