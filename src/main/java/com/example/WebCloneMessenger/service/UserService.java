@@ -5,11 +5,13 @@ import com.example.WebCloneMessenger.DTO.UserDTO;
 import com.example.WebCloneMessenger.DTO.UserLoginRequest;
 import com.example.WebCloneMessenger.Exception.AppException;
 import com.example.WebCloneMessenger.Exception.ErrorCode;
+import com.example.WebCloneMessenger.Model.AuthProvider;
 import com.example.WebCloneMessenger.Model.User;
 import com.example.WebCloneMessenger.events.BeforeDeleteUser;
 import com.example.WebCloneMessenger.mapper.UserMapper;
 import com.example.WebCloneMessenger.repos.UserRepository;
 import com.example.WebCloneMessenger.Exception.NotFoundException;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
@@ -33,6 +35,7 @@ public class UserService {
     private final ApplicationEventPublisher publisher;
     private final UserMapper userMapper;
     private final JwtService jwtService;
+    private final GoogleTokenVerifier verifier;
 
 
     public List<UserDTO> findAll() {
@@ -123,4 +126,39 @@ public class UserService {
         userRepository.save(tokenUser);
         return avatarUrl;
     }
+
+    public AuthResponse loginWithGoogle(String idToken) throws Exception {
+        GoogleIdToken.Payload payload = verifier.verify(idToken);
+
+        if (!payload.getEmailVerified()) {
+            throw new RuntimeException("Google email not verified");
+        }
+
+        String googleId = payload.getSubject(); // sub
+        String email = payload.getEmail();
+        String name = (String) payload.get("name");
+        String avatar = (String) payload.get("picture");
+
+        User user = userRepository
+                .findByProviderIdAndProvider(googleId, AuthProvider.GOOGLE.name());
+
+        if (user == null) {
+            user = new User();
+            user.setEmail(email);
+            user.setName(name);
+            user.setAvatarUrl(avatar);
+            user.setProvider(AuthProvider.GOOGLE.name());
+            user.setProviderId(googleId);
+            userRepository.save(user);
+        }
+
+        String token = jwtService.createToken(user);
+
+        return AuthResponse.builder()
+                .token(token)
+                .user(userMapper.toUserDTO(user))
+                .build();
+    }
+
+
 }

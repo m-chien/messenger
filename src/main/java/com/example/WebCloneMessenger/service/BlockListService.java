@@ -4,6 +4,7 @@ import com.example.WebCloneMessenger.DTO.BlockListDTO;
 import com.example.WebCloneMessenger.Model.BlockList;
 import com.example.WebCloneMessenger.Model.User;
 import com.example.WebCloneMessenger.events.BeforeDeleteUser;
+import com.example.WebCloneMessenger.mapper.BlockListMapper;
 import com.example.WebCloneMessenger.repos.BlockListRepository;
 import com.example.WebCloneMessenger.repos.UserRepository;
 import com.example.WebCloneMessenger.Exception.NotFoundException;
@@ -20,36 +21,39 @@ public class BlockListService {
 
     private final BlockListRepository blockListRepository;
     private final UserRepository userRepository;
+    private final BlockListMapper blockListMapper;
 
     public BlockListService(final BlockListRepository blockListRepository,
-            final UserRepository userRepository) {
+            final UserRepository userRepository, final BlockListMapper blockListMapper) {
         this.blockListRepository = blockListRepository;
         this.userRepository = userRepository;
+        this.blockListMapper = blockListMapper;
     }
 
     public List<BlockListDTO> findAll() {
         final List<BlockList> blockLists = blockListRepository.findAll(Sort.by("id"));
         return blockLists.stream()
-                .map(blockList -> mapToDTO(blockList, new BlockListDTO()))
+                .map(blockListMapper::toDto)
                 .toList();
     }
 
     public BlockListDTO get(final Integer id) {
         return blockListRepository.findById(id)
-                .map(blockList -> mapToDTO(blockList, new BlockListDTO()))
+                .map(blockListMapper::toDto)
                 .orElseThrow(NotFoundException::new);
     }
 
     public Integer create(final BlockListDTO blockListDTO) {
-        final BlockList blockList = new BlockList();
-        mapToEntity(blockListDTO, blockList);
+        final BlockList blockList = blockListMapper.toEntity(blockListDTO);
+        mapReq(blockListDTO, blockList);
         return blockListRepository.save(blockList).getId();
     }
 
     public void update(final Integer id, final BlockListDTO blockListDTO) {
         final BlockList blockList = blockListRepository.findById(id)
                 .orElseThrow(NotFoundException::new);
-        mapToEntity(blockListDTO, blockList);
+        blockListMapper.toEntity(blockListDTO);
+        mapReq(blockListDTO, blockList);
         blockListRepository.save(blockList);
     }
 
@@ -59,23 +63,13 @@ public class BlockListService {
         blockListRepository.delete(blockList);
     }
 
-    private BlockListDTO mapToDTO(final BlockList blockList, final BlockListDTO blockListDTO) {
-        blockListDTO.setId(blockList.getId());
-        blockListDTO.setBlockedDate(blockList.getBlockedDate());
-        blockListDTO.setBlocker(blockList.getBlocker() == null ? null : blockList.getBlocker().getId());
-        blockListDTO.setBlocked(blockList.getBlocked() == null ? null : blockList.getBlocked().getId());
-        return blockListDTO;
-    }
-
-    private BlockList mapToEntity(final BlockListDTO blockListDTO, final BlockList blockList) {
-        blockList.setBlockedDate(blockListDTO.getBlockedDate());
+    private void mapReq(final BlockListDTO blockListDTO, final BlockList blockList) {
         final User blocker = blockListDTO.getBlocker() == null ? null : userRepository.findById(blockListDTO.getBlocker())
                 .orElseThrow(() -> new NotFoundException("blocker not found"));
         blockList.setBlocker(blocker);
         final User blocked = blockListDTO.getBlocked() == null ? null : userRepository.findById(blockListDTO.getBlocked())
                 .orElseThrow(() -> new NotFoundException("blocked not found"));
         blockList.setBlocked(blocked);
-        return blockList;
     }
 
     @EventListener(BeforeDeleteUser.class)

@@ -2,6 +2,8 @@ package com.example.WebCloneMessenger.WebSocket;
 
 import com.example.WebCloneMessenger.DTO.MessageDTO;
 import com.example.WebCloneMessenger.DTO.MessageDetailProjection;
+import com.example.WebCloneMessenger.Exception.AppException;
+import com.example.WebCloneMessenger.Exception.ErrorCode;
 import com.example.WebCloneMessenger.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -27,14 +29,14 @@ public class ChatController {
     ) {
         if (principal == null) {
             System.err.println("ChatController.sendMessage: principal IS NULL for incoming message, reject");
-            throw new IllegalStateException("WebSocket principal is null — unauthenticated");
+            throw new AppException(ErrorCode.INVALID_WEBSOCKET_MESSAGE);
         }
         Integer userId = Integer.parseInt(principal.getName());
         System.out.println(userId);
+        System.out.println("date send: "+ message.getDateSend());
         message.setUserId(userId);
         message.setChatroom(roomId);
         int idNewMessage = messageService.create(message);
         return messageService.findMessageDetailById(idNewMessage);
     }
-
 }

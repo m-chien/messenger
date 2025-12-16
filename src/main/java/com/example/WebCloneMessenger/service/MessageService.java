@@ -20,6 +20,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -68,7 +69,9 @@ public class MessageService {
                     .orElseThrow(() -> new NotFoundException("replyMessage not found"));
             message.setReplyMessage(replyMsg);
         }
-
+        message.setDateSend(LocalDateTime.now());
+        message.setType("text");
+        message.setIsPin(false);
         return messageRepository.save(message).getId();
     }
 

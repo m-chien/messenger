@@ -48,6 +48,7 @@ public enum ErrorCode {
     CANNOT_DELETE_MESSAGE(3004, "Bạn không thể xóa tin nhắn này", HttpStatus.FORBIDDEN),
     CANNOT_EDIT_MESSAGE(3005, "Bạn không thể sửa tin nhắn này", HttpStatus.FORBIDDEN),
     MESSAGE_ALREADY_DELETED(3006, "Tin nhắn đã bị xóa", HttpStatus.BAD_REQUEST),
+    INVALID_WEBSOCKET_MESSAGE(3007, "Lỗi tin nhắn gửi lên sever", HttpStatus.BAD_REQUEST),
 
 
     // ==================== CHAT ROOM (4xxx) ====================

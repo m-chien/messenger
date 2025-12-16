@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 
 
@@ -22,7 +23,7 @@ public class MessageDTO {
     @Size(max = 50)
     private String type;
 
-    private OffsetDateTime dateSend;
+    private LocalDateTime dateSend;
 
     private String content;
 

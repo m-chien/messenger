@@ -11,7 +11,10 @@ spring:
     properties:
       hibernate:
         physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+        jdbc:
+          time_zone: Asia/Ho_Chi_Minh
   jackson:
+    time-zone: Asia/Ho_Chi_Minh
     date-format: yyyy-MM-dd
     serialization:
       write-dates-as-timestamps: false
@@ -20,6 +23,7 @@ spring:
       charset: UTF-8
       enabled: true
       force: true
-  time-zone: Asia/Ho_Chi_Minh
 jwt:
   secretKey: "a1Y1ksRv71WUdnPa6RNwqoc4Y5xtminhchiendeptrai"
+google:
+  clientId: "959381924356-5sdi5bunvmu825hfm75r13a5rktqv2uc.apps.googleusercontent.com"

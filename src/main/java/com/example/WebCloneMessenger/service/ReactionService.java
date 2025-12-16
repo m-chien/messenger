@@ -6,6 +6,7 @@ import com.example.WebCloneMessenger.Model.Reaction;
 import com.example.WebCloneMessenger.Model.User;
 import com.example.WebCloneMessenger.events.BeforeDeleteMessage;
 import com.example.WebCloneMessenger.events.BeforeDeleteUser;
+import com.example.WebCloneMessenger.mapper.ReactionMapper;
 import com.example.WebCloneMessenger.repos.MessageRepository;
 import com.example.WebCloneMessenger.repos.ReactionRepository;
 import com.example.WebCloneMessenger.repos.UserRepository;
@@ -24,37 +25,41 @@ public class ReactionService {
     private final ReactionRepository reactionRepository;
     private final UserRepository userRepository;
     private final MessageRepository messageRepository;
+    private final ReactionMapper reactionMapper;
 
     public ReactionService(final ReactionRepository reactionRepository,
-            final UserRepository userRepository, final MessageRepository messageRepository) {
+            final UserRepository userRepository, final MessageRepository messageRepository,
+            final ReactionMapper reactionMapper) {
         this.reactionRepository = reactionRepository;
         this.userRepository = userRepository;
         this.messageRepository = messageRepository;
+        this.reactionMapper = reactionMapper;
     }
 
     public List<ReactionDTO> findAll() {
         final List<Reaction> reactions = reactionRepository.findAll(Sort.by("id"));
         return reactions.stream()
-                .map(reaction -> mapToDTO(reaction, new ReactionDTO()))
+                .map(reactionMapper::toDto)
                 .toList();
     }
 
     public ReactionDTO get(final Integer id) {
         return reactionRepository.findById(id)
-                .map(reaction -> mapToDTO(reaction, new ReactionDTO()))
+                .map(reactionMapper::toDto)
                 .orElseThrow(NotFoundException::new);
     }
 
     public Integer create(final ReactionDTO reactionDTO) {
-        final Reaction reaction = new Reaction();
-        mapToEntity(reactionDTO, reaction);
+        final Reaction reaction = reactionMapper.toEntity(reactionDTO);
+        mapReq(reactionDTO, reaction);
         return reactionRepository.save(reaction).getId();
     }
 
     public void update(final Integer id, final ReactionDTO reactionDTO) {
         final Reaction reaction = reactionRepository.findById(id)
                 .orElseThrow(NotFoundException::new);
-        mapToEntity(reactionDTO, reaction);
+        reactionMapper.toEntity(reactionDTO);
+        mapReq(reactionDTO, reaction);
         reactionRepository.save(reaction);
     }
 
@@ -64,25 +69,13 @@ public class ReactionService {
         reactionRepository.delete(reaction);
     }
 
-    private ReactionDTO mapToDTO(final Reaction reaction, final ReactionDTO reactionDTO) {
-        reactionDTO.setId(reaction.getId());
-        reactionDTO.setType(reaction.getType());
-        reactionDTO.setDateSend(reaction.getDateSend());
-        reactionDTO.setIduser(reaction.getIduser() == null ? null : reaction.getIduser().getId());
-        reactionDTO.setMessage(reaction.getMessage() == null ? null : reaction.getMessage().getId());
-        return reactionDTO;
-    }
-
-    private Reaction mapToEntity(final ReactionDTO reactionDTO, final Reaction reaction) {
-        reaction.setType(reactionDTO.getType());
-        reaction.setDateSend(reactionDTO.getDateSend());
+    private void mapReq(final ReactionDTO reactionDTO, final Reaction reaction) {
         final User iduser = reactionDTO.getIduser() == null ? null : userRepository.findById(reactionDTO.getIduser())
                 .orElseThrow(() -> new NotFoundException("iduser not found"));
         reaction.setIduser(iduser);
         final Message message = reactionDTO.getMessage() == null ? null : messageRepository.findById(reactionDTO.getMessage())
                 .orElseThrow(() -> new NotFoundException("message not found"));
         reaction.setMessage(message);
-        return reaction;
     }
 
     @EventListener(BeforeDeleteUser.class)

@@ -1,6 +1,7 @@
 package com.example.WebCloneMessenger.Controller;
 
 import com.example.WebCloneMessenger.DTO.AuthResponse;
+import com.example.WebCloneMessenger.DTO.GoogleLoginRequest;
 import com.example.WebCloneMessenger.DTO.UserDTO;
 import com.example.WebCloneMessenger.DTO.UserLoginRequest;
 import com.example.WebCloneMessenger.Exception.ApiResponse;
@@ -58,6 +59,10 @@ public class UserResource {
     public ResponseEntity<AuthResponse> login(@RequestBody UserLoginRequest user) {
         System.out.println(userService.Login(user));
         return ResponseEntity.ok(userService.Login(user));
+    }
+    @PostMapping("/auth/google")
+    public AuthResponse loginGoogle(@RequestBody GoogleLoginRequest request) throws Exception {
+        return userService.loginWithGoogle(request.getIdToken());
     }
     @PostMapping("/upAva")
     public ResponseEntity<ApiResponse<String>> updateAvatar(
