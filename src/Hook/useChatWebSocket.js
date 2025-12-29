@@ -14,7 +14,7 @@ export function useChatWebSocket(selectedChat, token) {
     stompClientRef.current = client;
 
     client.connect({ Authorization: `Bearer ${token}` }, () =>
-      setConnected(true),
+      setConnected(true)
     );
 
     return () => {
@@ -32,8 +32,15 @@ export function useChatWebSocket(selectedChat, token) {
       (response) => {
         const msgBody = JSON.parse(response.body);
         setMessages((prev) => [...prev, msgBody]);
-      },
+      }
     );
+
+    fetch(`http://localhost:8080/chatRoomUsers/${selectedChat}/read-latest`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
     return () => {
       if (subscriptionRef.current) subscriptionRef.current.unsubscribe();
@@ -45,7 +52,7 @@ export function useChatWebSocket(selectedChat, token) {
       stompClientRef.current.send(
         `/app/chat.send/${selectedChat}`,
         {},
-        JSON.stringify(message),
+        JSON.stringify(message)
       );
     }
   };
