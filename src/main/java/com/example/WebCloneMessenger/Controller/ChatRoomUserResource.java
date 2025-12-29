@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,8 +36,8 @@ public class ChatRoomUserResource {
     @PostMapping
     public ResponseEntity<Integer> createChatRoomUser(
             @RequestBody @Valid final ChatRoomUserDTO chatRoomUserDTO) {
-        final Integer createdId = chatRoomUserService.create(chatRoomUserDTO);
-        return new ResponseEntity<>(createdId, HttpStatus.CREATED);
+        chatRoomUserService.create(chatRoomUserDTO);
+        return new ResponseEntity<>( HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
@@ -52,4 +53,10 @@ public class ChatRoomUserResource {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/{chatRoomId}/read-latest")
+    public ResponseEntity<Void> readLastedMessage(@PathVariable int chatRoomId, Authentication authentication) {
+        System.out.println(authentication.getName());
+        chatRoomUserService.readLatestMessage(chatRoomId, Integer.parseInt(authentication.getName()));
+        return ResponseEntity.ok().build();
+    }
 }

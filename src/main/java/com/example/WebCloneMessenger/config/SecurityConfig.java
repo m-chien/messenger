@@ -26,7 +26,7 @@ import javax.crypto.spec.SecretKeySpec;
 public class SecurityConfig implements WebMvcConfigurer {
     @Value("${jwt.secretKey}")
     private String secretKey;
-    private final String[] PUBLIC_ENDPOINT = {"/users/**", "/messages/**", "/chatRoomUsers", "/ws/**", "/topic/**", "/app/**", "/img_user/user_avatar/**", "/img_user/group_avatar/**"};
+    private final String[] PUBLIC_ENDPOINT = {"/users/**", "/messages/**", "/chatRoomUsers/**", "/ws/**", "/topic/**", "/app/**", "/img_user/user_avatar/**", "/img_user/group_avatar/**"};
     private final String[] PRIVATE_ENDPOINT = {"/users/admin/*"};
 
     @Bean

@@ -15,6 +15,7 @@ import com.example.WebCloneMessenger.repos.MessageRepository;
 import com.example.WebCloneMessenger.repos.UserRepository;
 import com.example.WebCloneMessenger.Exception.NotFoundException;
 import com.example.WebCloneMessenger.Exception.ReferencedException;
+import jakarta.transaction.Transactional;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -54,10 +55,10 @@ public class ChatRoomUserService {
                 .orElseThrow(NotFoundException::new);
     }
 
-    public Integer create(final ChatRoomUserDTO chatRoomUserDTO) {
+    public void create(final ChatRoomUserDTO chatRoomUserDTO) {
         final ChatRoomUser chatRoomUser = chatRoomUserMapper.toEntity(chatRoomUserDTO);
         mapReq(chatRoomUserDTO, chatRoomUser);
-        return chatRoomUserRepository.save(chatRoomUser).getId();
+        chatRoomUserRepository.save(chatRoomUser);
     }
 
     public void update(final Long id, final ChatRoomUserDTO chatRoomUserDTO) {
@@ -89,35 +90,57 @@ public class ChatRoomUserService {
 
     @EventListener(BeforeDeleteUser.class)
     public void on(final BeforeDeleteUser event) {
-        final ReferencedException referencedException = new ReferencedException();
-        final ChatRoomUser iduserChatRoomUser = chatRoomUserRepository.findFirstByIduserId(event.getId());
-        if (iduserChatRoomUser != null) {
-            referencedException.setKey("user.chatRoomUser.iduser.referenced");
-            referencedException.addParam(iduserChatRoomUser.getId());
-            throw referencedException;
+        if (chatRoomUserRepository.existsByIduser_Id(event.getId())) {
+            ReferencedException ex = new ReferencedException();
+            ex.setKey("user.chatRoomUser.iduser.referenced");
+            throw ex;
         }
     }
+
 
     @EventListener(BeforeDeleteChatRoom.class)
     public void on(final BeforeDeleteChatRoom event) {
-        final ReferencedException referencedException = new ReferencedException();
-        final ChatRoomUser idchatroomChatRoomUser = chatRoomUserRepository.findFirstByIdchatroomId(event.getId());
-        if (idchatroomChatRoomUser != null) {
-            referencedException.setKey("chatRoom.chatRoomUser.idchatroom.referenced");
-            referencedException.addParam(idchatroomChatRoomUser.getId());
-            throw referencedException;
+        if (chatRoomUserRepository.existsByIdchatroom_Id(event.getId())) {
+            ReferencedException ex = new ReferencedException();
+            ex.setKey("chatRoom.chatRoomUser.idchatroom.referenced");
+            throw ex;
         }
     }
+
 
     @EventListener(BeforeDeleteMessage.class)
     public void on(final BeforeDeleteMessage event) {
-        final ReferencedException referencedException = new ReferencedException();
-        final ChatRoomUser lastSeenMessageChatRoomUser = chatRoomUserRepository.findFirstByLastSeenMessageId(event.getId());
-        if (lastSeenMessageChatRoomUser != null) {
-            referencedException.setKey("message.chatRoomUser.lastSeenMessage.referenced");
-            referencedException.addParam(lastSeenMessageChatRoomUser.getId());
-            throw referencedException;
+        if (chatRoomUserRepository.existsByLastSeenMessage_Id(event.getId())) {
+            ReferencedException ex = new ReferencedException();
+            ex.setKey("message.chatRoomUser.lastSeenMessage.referenced");
+            throw ex;
         }
     }
 
+
+    @Transactional
+    public void readLatestMessage(int chatRoomId, int userId) {
+
+        ChatRoomUser chatRoomUser =
+                chatRoomUserRepository
+                        .findByIdchatroom_IdAndIduser_Id(chatRoomId, userId);
+
+        ChatRoom chatRoom = chatRoomRepository.findById(chatRoomId)
+                .orElseThrow(() -> new NotFoundException("chatroom not found"));
+
+        Message lastMessage = chatRoom.getLastMessage();
+        System.out.println("Last message ID: " + (lastMessage != null ? lastMessage.getId() : "null"));
+
+        // Chatroom chưa có tin nhắn → không cần update
+        if (lastMessage == null) return;
+
+        // Chỉ update nếu message mới hơn
+        if (
+                chatRoomUser.getLastSeenMessage() == null ||
+                        chatRoomUser.getLastSeenMessage().getId() < lastMessage.getId()
+        ) {
+            chatRoomUser.setLastSeenMessage(lastMessage);
+            chatRoomUserRepository.save(chatRoomUser);
+        }
+    }
 }
