@@ -34,11 +34,7 @@ export const ConversationItem = ({ conv, selectedChat, setSelectedChat }) => {
           <h3>{conv.name}</h3>
           <span>{timeAgo(conv.dateSend)}</span>
         </div>
-        <p
-          className={conv.lastSeenMessageId !== conv.idMessage ? "unread" : ""}
-        >
-          {conv.content}
-        </p>
+        <p className={conv.isUnread ? "unread" : ""}>{conv.content}</p>
       </div>
       {conv.unread && <div className="unread-dot"></div>}
       <div className="conversation-menu-container">

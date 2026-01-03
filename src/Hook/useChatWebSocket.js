@@ -2,57 +2,91 @@ import { useEffect, useRef, useState } from "react";
 import SockJS from "sockjs-client";
 import { over } from "stompjs";
 
-export function useChatWebSocket(selectedChat, token) {
+export function useChatWebSocket(
+  selectedChatId,
+  token,
+  userId,
+  onSidebarUpdate
+) {
   const stompClientRef = useRef(null);
-  const subscriptionRef = useRef(null);
+  const subscriptionChatRef = useRef(null);
+  const subscriptionSidebarRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
+    setMessages([]);
+  }, [selectedChatId]);
+
+  // 1. Kết nối WebSocket
+  useEffect(() => {
+    if (!token) return;
+
     const sock = new SockJS("http://localhost:8080/ws");
     const client = over(sock);
+    // Tắt log debug của stompjs cho đỡ rác console
+    client.debug = () => {};
     stompClientRef.current = client;
 
-    client.connect({ Authorization: `Bearer ${token}` }, () =>
-      setConnected(true)
-    );
+    client.connect({ Authorization: `Bearer ${token}` }, () => {
+      setConnected(true);
+
+      // 2. SUBSCRIBE KÊNH SIDEBAR (Luôn lắng nghe dù đang ở đâu)
+      if (userId && onSidebarUpdate) {
+        // Hủy đăng ký cũ nếu có để tránh duplicate
+        if (subscriptionSidebarRef.current)
+          subscriptionSidebarRef.current.unsubscribe();
+
+        subscriptionSidebarRef.current = client.subscribe(
+          `/topic/user/${userId}/sidebar`,
+          (response) => {
+            const sidebarDto = JSON.parse(response.body);
+            console.log("🚀 ~ useChatWebSocket ~ sidebarDto:", sidebarDto)
+            // Gọi callback để HomePage xử lý update UI
+            onSidebarUpdate(sidebarDto);
+          }
+        );
+      }
+    });
 
     return () => {
       if (client && client.connected) client.disconnect();
     };
-  }, [token]);
+  }, [token, userId]); // Chỉ kết nối lại khi token hoặc userId thay đổi
 
+  // 3. SUBSCRIBE KÊNH CHAT ROOM (Chỉ khi chọn phòng)
   useEffect(() => {
-    if (!connected || !selectedChat) return;
+    if (!connected || !selectedChatId || !stompClientRef.current) return;
 
-    if (subscriptionRef.current) subscriptionRef.current.unsubscribe();
+    if (subscriptionChatRef.current) subscriptionChatRef.current.unsubscribe();
 
-    subscriptionRef.current = stompClientRef.current.subscribe(
-      `/topic/chatroom/${selectedChat}`,
+    // Lắng nghe tin nhắn chi tiết để hiện vào khung chat
+    subscriptionChatRef.current = stompClientRef.current.subscribe(
+      `/topic/chatroom/${selectedChatId}`,
       (response) => {
         const msgBody = JSON.parse(response.body);
         setMessages((prev) => [...prev, msgBody]);
       }
     );
 
-    fetch(`http://localhost:8080/chatRoomUsers/${selectedChat}/read-latest`, {
+    // Call API đánh dấu đã đọc (nếu cần)
+    fetch(`http://localhost:8080/chatRoomUsers/${selectedChatId}/read-latest`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      headers: { Authorization: `Bearer ${token}` },
+    }).catch(console.error);
 
     return () => {
-      if (subscriptionRef.current) subscriptionRef.current.unsubscribe();
+      if (subscriptionChatRef.current)
+        subscriptionChatRef.current.unsubscribe();
     };
-  }, [selectedChat, connected]);
+  }, [selectedChatId, connected]);
 
-  const sendMessage = (message) => {
+  const sendMessage = (messagePayload) => {
     if (stompClientRef.current && stompClientRef.current.connected) {
       stompClientRef.current.send(
-        `/app/chat.send/${selectedChat}`,
+        `/app/chat.send/${messagePayload.chatroom}`,
         {},
-        JSON.stringify(message)
+        JSON.stringify(messagePayload)
       );
     }
   };
