@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 
@@ -18,25 +19,32 @@ import java.security.Principal;
 @RequiredArgsConstructor
 public class ChatController {
     private final MessageService messageService;
+    private final SimpMessagingTemplate simpMessagingTemplate;
 
     // Khi client gửi tin nhắn đến /app/chat.send
     @MessageMapping("/chat.send/{roomId}")
-    @SendTo("/topic/chatroom/{roomId}")
-    public MessageDetailProjection sendMessage(
+    public void sendMessage(
             @DestinationVariable Integer roomId,
             MessageDTO message,
             Principal principal
     ) {
         if (principal == null) {
-            System.err.println("ChatController.sendMessage: principal IS NULL for incoming message, reject");
             throw new AppException(ErrorCode.INVALID_WEBSOCKET_MESSAGE);
         }
-        Integer userId = Integer.parseInt(principal.getName());
-        System.out.println(userId);
-        System.out.println("date send: "+ message.getDateSend());
-        message.setUserId(userId);
+
+        Integer senderId = Integer.parseInt(principal.getName());
+        message.setUserId(senderId);
         message.setChatroom(roomId);
-        int idNewMessage = messageService.create(message);
-        return messageService.findMessageDetailById(idNewMessage);
+
+        // Lưu message
+        int messageId = messageService.create(message);
+        MessageDetailProjection savedMessage =
+                messageService.findMessageDetailById(messageId);
+
+        // 1) Gửi cho chat window (ai subscribe /topic/chatroom/{roomId})
+        simpMessagingTemplate.convertAndSend("/topic/chatroom/" + roomId, savedMessage);
+
+        // 2) Delegate notify sidebar cho service (service sẽ dùng messagingTemplate)
+        messageService.notifySidebarUsers(roomId, savedMessage);
     }
 }

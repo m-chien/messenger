@@ -2,6 +2,7 @@ package com.example.WebCloneMessenger.service;
 
 import com.example.WebCloneMessenger.DTO.MessageDTO;
 import com.example.WebCloneMessenger.DTO.MessageDetailProjection;
+import com.example.WebCloneMessenger.DTO.SidebarMessageDTO;
 import com.example.WebCloneMessenger.Model.ChatRoom;
 import com.example.WebCloneMessenger.Model.Message;
 import com.example.WebCloneMessenger.Model.User;
@@ -9,7 +10,9 @@ import com.example.WebCloneMessenger.events.BeforeDeleteChatRoom;
 import com.example.WebCloneMessenger.events.BeforeDeleteMessage;
 import com.example.WebCloneMessenger.events.BeforeDeleteUser;
 import com.example.WebCloneMessenger.mapper.MessageMapper;
+import com.example.WebCloneMessenger.mapper.UserMapper;
 import com.example.WebCloneMessenger.repos.ChatRoomRepository;
+import com.example.WebCloneMessenger.repos.ChatRoomUserRepository;
 import com.example.WebCloneMessenger.repos.MessageRepository;
 import com.example.WebCloneMessenger.repos.UserRepository;
 import com.example.WebCloneMessenger.Exception.NotFoundException;
@@ -18,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Sort;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -33,7 +37,8 @@ public class MessageService {
     private final ChatRoomRepository chatRoomRepository;
     private final ApplicationEventPublisher publisher;
     private final MessageMapper messageMapper;
-    private final MessageMapper MessageMapper;
+    private final SimpMessagingTemplate simpMessagingTemplate;
+    private final ChatRoomUserRepository chatRoomUserRepository;
 
 
     public List<MessageDTO> findAll() {
@@ -154,5 +159,23 @@ public class MessageService {
 
     public MessageDetailProjection findMessageDetailById(int idNewMessage) {
         return messageRepository.findMessageDetailById(idNewMessage);
+    }
+
+    public void notifySidebarUsers(Integer roomId, MessageDetailProjection msg) {
+        // Lấy tất cả userId trong phòng (bao gồm người gửi). Bạn có thể bỏ người gửi nếu muốn.
+        List<Integer> userIds = chatRoomUserRepository.findUserIdsByChatroom(roomId);
+
+        // Tạo DTO nhẹ cho sidebar (cần map theo DTO bên FE)
+        SidebarMessageDTO dto = new SidebarMessageDTO(
+                roomId,
+                msg.getContent(),
+                msg.getDateSend(),
+                msg.getUserId()
+        );
+
+        // Gửi cho từng user
+        for (Integer userId : userIds) {
+            simpMessagingTemplate.convertAndSend("/topic/user/" + userId + "/sidebar", dto);
+        }
     }
 }
