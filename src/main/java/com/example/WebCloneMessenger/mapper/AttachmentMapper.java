@@ -8,7 +8,6 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface AttachmentMapper {
 
-    @Mapping(target = "idmessage", expression = "java(attachment.getIdmessage() != null ? attachment.getIdmessage().getId() : null)")
     AttachmentDTO toDto(Attachment attachment);
 
     @Mapping(target = "idmessage", ignore = true)

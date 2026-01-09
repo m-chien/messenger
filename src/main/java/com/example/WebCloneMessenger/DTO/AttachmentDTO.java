@@ -23,7 +23,5 @@ public class AttachmentDTO {
 
     private Long fileSize;
 
-    @NotNull
-    private Integer idmessage;
 
 }

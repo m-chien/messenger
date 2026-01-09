@@ -1,22 +1,20 @@
 package com.example.WebCloneMessenger.service;
 
-import com.example.WebCloneMessenger.DTO.MessageDTO;
-import com.example.WebCloneMessenger.DTO.MessageDetailProjection;
-import com.example.WebCloneMessenger.DTO.SidebarMessageDTO;
+import com.example.WebCloneMessenger.DTO.*;
+import com.example.WebCloneMessenger.Model.Attachment;
 import com.example.WebCloneMessenger.Model.ChatRoom;
 import com.example.WebCloneMessenger.Model.Message;
 import com.example.WebCloneMessenger.Model.User;
 import com.example.WebCloneMessenger.events.BeforeDeleteChatRoom;
 import com.example.WebCloneMessenger.events.BeforeDeleteMessage;
 import com.example.WebCloneMessenger.events.BeforeDeleteUser;
+import com.example.WebCloneMessenger.mapper.AttachmentMapper;
 import com.example.WebCloneMessenger.mapper.MessageMapper;
 import com.example.WebCloneMessenger.mapper.UserMapper;
-import com.example.WebCloneMessenger.repos.ChatRoomRepository;
-import com.example.WebCloneMessenger.repos.ChatRoomUserRepository;
-import com.example.WebCloneMessenger.repos.MessageRepository;
-import com.example.WebCloneMessenger.repos.UserRepository;
+import com.example.WebCloneMessenger.repos.*;
 import com.example.WebCloneMessenger.Exception.NotFoundException;
 import com.example.WebCloneMessenger.Exception.ReferencedException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.event.EventListener;
@@ -26,6 +24,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -39,6 +39,9 @@ public class MessageService {
     private final MessageMapper messageMapper;
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final ChatRoomUserRepository chatRoomUserRepository;
+    private final AttachmentRepository attachmentRepository;
+    private final AttachmentMapper attachmentMapper;
+    private final FileUploadService minioService;
 
 
     public List<MessageDTO> findAll() {
@@ -52,6 +55,7 @@ public class MessageService {
                 .orElseThrow(NotFoundException::new);
     }
 
+    @Transactional
     public Integer create(final MessageDTO messageDTO) {
         Message message = messageMapper.toEntity(messageDTO);
 
@@ -75,9 +79,19 @@ public class MessageService {
             message.setReplyMessage(replyMsg);
         }
         message.setDateSend(LocalDateTime.now());
-        message.setType("text");
+        message.setType(messageDTO.getType());
         message.setIsPin(false);
-        return messageRepository.save(message).getId();
+
+        Message savedMessage = messageRepository.save(message);
+
+        if (messageDTO.getAttachments() != null) {
+            for (AttachmentDTO a : messageDTO.getAttachments()) {
+                Attachment attachment = attachmentMapper.toEntity(a);
+                attachment.setIdmessage(savedMessage);
+                attachmentRepository.save(attachment);
+            }
+        }
+        return savedMessage.getId();
     }
 
 
@@ -120,9 +134,54 @@ public class MessageService {
         messageRepository.delete(message);
     }
 
-    public List<MessageDetailProjection> findByChatRoomId(final Integer chatRoomId) {
-        return messageRepository.findMessageDetailsByChatRoomId(chatRoomId);
+    public List<MessageResponseDTO> findByChatRoomId(final Integer chatRoomId) {
+
+        List<MessageDetailProjection> messages =
+                messageRepository.findMessageDetailsByChatRoomId(chatRoomId);
+
+        List<Integer> messageIds = messages.stream()
+                .map(MessageDetailProjection::getId)
+                .toList();
+
+        List<Attachment> attachments =
+                attachmentRepository.findByIdmessage_IdIn(messageIds);
+
+        Map<Integer, List<AttachmentDTO>> attachmentMap =
+                attachments.stream()
+                        .collect(Collectors.groupingBy(
+                                a -> a.getIdmessage().getId(),
+                                Collectors.mapping(a -> {
+                                    AttachmentDTO dto = attachmentMapper.toDto(a);
+                                    dto.setFileUrl(
+                                            minioService.getPresignedUrl(a.getFileUrl())
+                                    );
+                                    return dto;
+                                }, Collectors.toList())
+                        ));
+
+        // 🔥 GHÉP MESSAGE + ATTACHMENT
+        return messages.stream().map(m -> {
+            MessageResponseDTO dto = new MessageResponseDTO();
+
+            dto.setId(m.getId());
+            dto.setType(m.getType());
+            dto.setContent(m.getContent());
+            dto.setIsPin(m.getIsPin());
+            dto.setDateSend(m.getDateSend());
+
+            dto.setUserId(m.getUserId());
+            dto.setIsOnline(m.getIsOnline());
+            dto.setUserName(m.getUserName());
+            dto.setAvatarUrl(m.getAvatarUrl());
+
+            dto.setAttachments(
+                    attachmentMap.getOrDefault(m.getId(), List.of())
+            );
+
+            return dto;
+        }).toList();
     }
+
 
     @EventListener(BeforeDeleteUser.class)
     public void on(final BeforeDeleteUser event) {

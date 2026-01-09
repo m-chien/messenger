@@ -23,7 +23,17 @@ spring:
       charset: UTF-8
       enabled: true
       force: true
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
 jwt:
   secretKey: "a1Y1ksRv71WUdnPa6RNwqoc4Y5xtminhchiendeptrai"
 google:
   clientId: "959381924356-5sdi5bunvmu825hfm75r13a5rktqv2uc.apps.googleusercontent.com"
+minio:
+  url: http://localhost:9000
+  access-key: minioadmin
+  secret-key: minioadmin
+  bucket: chat-attachments
+

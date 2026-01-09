@@ -10,6 +10,7 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.List;
 
 
 @Getter
@@ -30,12 +31,12 @@ public class MessageDTO {
     @JsonProperty("isPin")
     private Boolean isPin;
 
-    @NotNull
     private Integer userId;
-
-    @NotNull
+    
     private Integer chatroom;
 
     private Integer replyMessage;
+
+    private List<AttachmentDTO> attachments;
 
 }

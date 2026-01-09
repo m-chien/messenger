@@ -45,7 +45,6 @@ public class AttachmentService {
 
     public Integer create(final AttachmentDTO attachmentDTO) {
         final Attachment attachment = attachmentMapper.toEntity(attachmentDTO);
-        mapReq(attachmentDTO, attachment);
         return attachmentRepository.save(attachment).getId();
     }
 
@@ -53,7 +52,6 @@ public class AttachmentService {
         final Attachment attachment = attachmentRepository.findById(id)
                 .orElseThrow(NotFoundException::new);
         attachmentMapper.toEntity(attachmentDTO);
-        mapReq(attachmentDTO, attachment);
         attachmentRepository.save(attachment);
     }
 
@@ -63,11 +61,6 @@ public class AttachmentService {
         attachmentRepository.delete(attachment);
     }
 
-    private void mapReq(final AttachmentDTO attachmentDTO, final Attachment attachment) {
-        final Message idmessage = attachmentDTO.getIdmessage() == null ? null : messageRepository.findById(attachmentDTO.getIdmessage())
-                .orElseThrow(() -> new NotFoundException("idmessage not found"));
-        attachment.setIdmessage(idmessage);
-    }
 
     @EventListener(BeforeDeleteMessage.class)
     public void on(final BeforeDeleteMessage event) {

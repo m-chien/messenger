@@ -35,6 +35,7 @@ public class ChatController {
         Integer senderId = Integer.parseInt(principal.getName());
         message.setUserId(senderId);
         message.setChatroom(roomId);
+        System.out.println("xem thông tin message nhận được: " + message.getAttachments());
 
         // Lưu message
         int messageId = messageService.create(message);

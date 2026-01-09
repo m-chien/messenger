@@ -35,7 +35,7 @@ public class Attachment {
     @Column(length = 500)
     private String fileUrl;
 
-    @Column(length = 50)
+    @Column(length = 255)
     private String fileType;
 
     @Column
