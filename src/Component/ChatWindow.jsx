@@ -1,13 +1,5 @@
-import React from "react";
-import {
-  Image,
-  Info,
-  Mic,
-  Phone,
-  Send,
-  Smile,
-  Video,
-} from "lucide-react";
+import React, { useState } from "react";
+import { Image, Info, Mic, Phone, Send, Smile, Video } from "lucide-react";
 import { format, isToday } from "date-fns";
 import { vi } from "date-fns/locale";
 
@@ -18,7 +10,11 @@ const ChatWindow = ({
   messageInput,
   setMessageInput,
   handleSendMessage,
+  selectedFiles,
+  setSelectedFiles,
 }) => {
+  const canSend = messageInput.trim() !== "" || selectedFiles.length > 0;
+
   const formatTimeWithLibrary = (isoString) => {
     if (!isoString) return "";
     const date = new Date(isoString);
@@ -30,14 +26,45 @@ const ChatWindow = ({
     }
   };
 
+  const handleSelectFile = (e) => {
+    const files = Array.from(e.target.files);
+    setSelectedFiles((prev) => [...prev, ...files]);
+  };
+
+  const renderAttachment = (att) => {
+    if (att.fileType.startsWith("image/")) {
+      return (
+        <img src={att.fileUrl} alt={att.fileName} className="chat-image" />
+      );
+    }
+
+    if (att.fileType.startsWith("video/")) {
+      return (
+        <video controls className="chat-video">
+          <source src={att.fileUrl} type={att.fileType} />
+        </video>
+      );
+    }
+
+    return (
+      <a
+        href={att.fileUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="chat-file"
+      >
+        📎 {att.fileName}
+      </a>
+    );
+  };
+
+  const fileRef = React.useRef();
+
   return (
     <div className="chat">
       <div className="chat-header">
         <div className="chat-user">
-          <img
-            src={`http://localhost:8080${selectedChat?.logo}`}
-            alt="User"
-          />
+          <img src={`http://localhost:8080${selectedChat?.logo}`} alt="User" />
           <div>
             <h2>{selectedChat?.name}</h2>
             <p className="active-text">Active now</p>
@@ -87,7 +114,22 @@ const ChatWindow = ({
                 </div>
 
                 <div className="message-content">
-                  <div className="message-bubble">{msg.content}</div>
+                  <div className="message-body">
+                    {msg.attachments?.length > 0 && (
+                      <div className="message-attachments">
+                        {msg.attachments.map((att) => (
+                          <div key={att.id} className="attachment-item">
+                            {renderAttachment(att)}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {msg.content && (
+                      <div className="message-bubble">{msg.content}</div>
+                    )}
+                  </div>
+
                   <span className="timestamp">
                     {formatTimeWithLibrary(msg.dateSend)}
                   </span>
@@ -99,30 +141,59 @@ const ChatWindow = ({
       </div>
 
       <div className="chat-input">
-        <button className="icon-btn">
-          <Image size={20} />
+        <button className="icon-btn" onClick={() => fileRef.current.click()}>
+          <Image size={25} />
         </button>
+
+        <input type="file" hidden ref={fileRef} onChange={handleSelectFile} />
         <button className="icon-btn">
-          <Smile size={20} />
+          <Smile size={25} />
         </button>
-        <textarea
-          className="input"
-          placeholder="Aa"
-          value={messageInput}
-          onChange={(e) => setMessageInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (
-              e.key === "Enter" &&
-              !e.shiftKey &&
-              messageInput.trim() !== ""
-            ) {
-              e.preventDefault(); // tránh xuống dòng
-              handleSendMessage();
-            }
-          }}
-          rows={1}
-        />
-        {messageInput.trim() ? (
+        <div className="input-box">
+          {selectedFiles.length > 0 && (
+            <div className="attachment-preview">
+              {selectedFiles.map((file, index) => (
+                <div key={index} className="preview-item">
+                  <button
+                    className="remove-file"
+                    onClick={() =>
+                      setSelectedFiles((prev) =>
+                        prev.filter((_, i) => i !== index)
+                      )
+                    }
+                  >
+                    ✕
+                  </button>
+
+                  {file.type.startsWith("image/") ? (
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={file.name}
+                      className="preview-image"
+                    />
+                  ) : (
+                    <div className="preview-file">📎 {file.name}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <textarea
+            className="input"
+            placeholder="Aa"
+            value={messageInput}
+            onChange={(e) => setMessageInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey && canSend) {
+                e.preventDefault();
+                handleSendMessage();
+              }
+            }}
+            rows={1}
+          />
+        </div>
+        {canSend ? (
           <button className="icon-btn send-btn" onClick={handleSendMessage}>
             <Send size={20} />
           </button>

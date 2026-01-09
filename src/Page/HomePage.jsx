@@ -5,10 +5,12 @@ import { useChatWebSocket } from "../Hook/useChatWebSocket.js";
 import useFetchAll from "../Hook/useFetchAll";
 import Sidebar from "../Component/Sidebar";
 import ChatWindow from "../Component/ChatWindow";
+import { api } from "../Api/Api.js";
 
 function HomePage() {
   const token = sessionStorage.getItem("accessToken");
   const { theme, toggleTheme } = useTheme();
+  const [selectedFiles, setSelectedFiles] = useState([]);
 
   // State
   const [selectedChat, setSelectedChat] = useState(null);
@@ -46,45 +48,40 @@ function HomePage() {
 
   // 3. HÀM XỬ LÝ KHI BE BẮN NOTI SIDEBAR VỀ
   // DTO BE gửi về: { roomId: 1, content: "abc", dateSend: "...", userId: 5 }
-  const handleSidebarUpdate = useCallback(
-    (sidebarDto) => {
-      setChatRooms((prevRooms) => {
-        const idx = prevRooms.findIndex(
-          (r) => String(r.idChatroom) === String(sidebarDto.chatroomId)
-        );
+  const handleSidebarUpdate = useCallback((sidebarDto) => {
+    setChatRooms((prevRooms) => {
+      const idx = prevRooms.findIndex(
+        (r) => String(r.idChatroom) === String(sidebarDto.chatroomId)
+      );
 
-        if (idx === -1) return prevRooms;
+      if (idx === -1) return prevRooms;
 
-        const isCurrentRoom =
-          String(selectedChatRef.current?.idChatroom) ===
-          String(sidebarDto.chatroomId);
+      const isCurrentRoom =
+        String(selectedChatRef.current?.idChatroom) ===
+        String(sidebarDto.chatroomId);
 
-        const updatedRoom = {
-          ...prevRooms[idx],
-          content: sidebarDto.lastMessage,
-          dateSend: sidebarDto.time,
+      const updatedRoom = {
+        ...prevRooms[idx],
+        content: sidebarDto.lastMessage,
+        dateSend: sidebarDto.time,
 
-          // 👉 QUY TẮC CỐT LÕI
-          isUnread: isCurrentRoom ? 0 : 1,
-          unreadCount: isCurrentRoom
-            ? 0
-            : (prevRooms[idx].unreadCount || 0) + 1,
-        };
+        // 👉 QUY TẮC CỐT LÕI
+        isUnread: isCurrentRoom ? 0 : 1,
+        unreadCount: isCurrentRoom ? 0 : (prevRooms[idx].unreadCount || 0) + 1,
+      };
 
-        const updatedRooms = [...prevRooms];
-        updatedRooms.splice(idx, 1);
-        updatedRooms.unshift(updatedRoom);
+      const updatedRooms = [...prevRooms];
+      updatedRooms.splice(idx, 1);
+      updatedRooms.unshift(updatedRoom);
 
-        // Nếu đang mở phòng này → sync selectedChat
-        if (isCurrentRoom) {
-          setSelectedChat(updatedRoom);
-        }
+      // Nếu đang mở phòng này → sync selectedChat
+      if (isCurrentRoom) {
+        setSelectedChat(updatedRoom);
+      }
 
-        return updatedRooms;
-      });
-    },
-    []
-  );
+      return updatedRooms;
+    });
+  }, []);
 
   // 4. Fetch tin nhắn lịch sử của phòng đang chọn
   const { data: messagesData } = useFetchAll(
@@ -102,15 +99,25 @@ function HomePage() {
   const AllMessages = [...(messagesData || []), ...messages];
 
   // 6. Xử lý gửi tin
-  const handleSendMessage = () => {
-    if (!messageInput.trim()) return;
+  const handleSendMessage = async () => {
+    if (!messageInput.trim() && selectedFiles.length === 0) return;
+    // 1. Upload file
+    const uploadedAttachments = await Promise.all(
+      selectedFiles.map(uploadFile)
+    );
+    console.log("🚀 ~ handleSendMessage ~ uploadedAttachments:", uploadedAttachments)
 
+    // 2. GỬI QUA WEBSOCKET (QUAN TRỌNG)
     sendMessage({
-      content: messageInput,
       chatroom: selectedChat.idChatroom,
+      content: messageInput,
+      type: selectedFiles.length > 0 ? "FILE" : "TEXT",
+      attachments: uploadedAttachments,
     });
 
+    // 3. reset UI
     setMessageInput("");
+    setSelectedFiles([]);
   };
 
   const handleChatRoomSelect = (chatroom) => {
@@ -132,6 +139,20 @@ function HomePage() {
     );
   };
 
+  const uploadFile = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await api.post("/files/upload", formData);
+
+    return {
+      fileUrl: res.data.objectKey,
+      fileType: res.data.fileType,
+      fileName: res.data.fileName,
+      fileSize: res.data.fileSize,
+    };
+  };
+
   return (
     <div className="messenger">
       <Sidebar
@@ -149,6 +170,8 @@ function HomePage() {
         messageInput={messageInput}
         setMessageInput={setMessageInput}
         handleSendMessage={handleSendMessage}
+        selectedFiles={selectedFiles}
+        setSelectedFiles={setSelectedFiles}
       />
     </div>
   );
