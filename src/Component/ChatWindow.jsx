@@ -14,6 +14,7 @@ const ChatWindow = ({
   setSelectedFiles,
 }) => {
   const canSend = messageInput.trim() !== "" || selectedFiles.length > 0;
+  const [previewImage, setPreviewImage] = useState(null);
 
   const formatTimeWithLibrary = (isoString) => {
     if (!isoString) return "";
@@ -34,7 +35,12 @@ const ChatWindow = ({
   const renderAttachment = (att) => {
     if (att.fileType.startsWith("image/")) {
       return (
-        <img src={att.fileUrl} alt={att.fileName} className="chat-image" />
+        <img
+          src={att.fileUrl}
+          alt={att.fileName}
+          className="chat-image"
+          onClick={() => setPreviewImage(att.fileUrl)}
+        />
       );
     }
 
@@ -203,6 +209,21 @@ const ChatWindow = ({
           </button>
         )}
       </div>
+      {previewImage && (
+        <div
+          className="image-preview-overlay"
+          onClick={() => setPreviewImage(null)}
+        >
+          <img
+            src={previewImage}
+            className="image-preview"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button className="close-btn" onClick={() => setPreviewImage(null)}>
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 };
