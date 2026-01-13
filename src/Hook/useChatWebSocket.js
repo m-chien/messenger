@@ -12,6 +12,7 @@ export function useChatWebSocket(
   const subscriptionChatRef = useRef(null);
   const subscriptionSidebarRef = useRef(null);
   const [messages, setMessages] = useState([]);
+  console.log("🚀 ~ useChatWebSocket ~ messages:", messages)
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {

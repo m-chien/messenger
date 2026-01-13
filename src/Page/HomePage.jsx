@@ -87,6 +87,7 @@ function HomePage() {
   const { data: messagesData } = useFetchAll(
     selectedChat ? `/messages/chatroom/${selectedChat.idChatroom}` : null
   );
+  console.log("🚀 ~ HomePage ~ messagesData:", messagesData)
 
   // 5. Khởi tạo WebSocket
   const { messages, sendMessage } = useChatWebSocket(

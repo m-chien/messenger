@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { Image, Info, Mic, Phone, Send, Smile, Video } from "lucide-react";
 import { format, isToday } from "date-fns";
 import { vi } from "date-fns/locale";
+import ImagePreviewModal from "./ImagePreviewModal";
 
 const ChatWindow = ({
   selectedChat,
@@ -29,10 +30,13 @@ const ChatWindow = ({
 
   const handleSelectFile = (e) => {
     const files = Array.from(e.target.files);
-    setSelectedFiles((prev) => [...prev, ...files]);
+    setSelectedFiles((prev) => {
+      const existing = new Set(prev.map((f) => f.name + f.size));
+      return [...prev, ...files.filter((f) => !existing.has(f.name + f.size))];
+    });
   };
 
-  const renderAttachment = (att) => {
+  const renderAttachment = React.useCallback((att) => {
     if (att.fileType.startsWith("image/")) {
       return (
         <img
@@ -59,12 +63,12 @@ const ChatWindow = ({
         rel="noopener noreferrer"
         className="chat-file"
       >
-        📎 {att.fileName}
+        📎{att.fileName}
       </a>
     );
-  };
+  }, []);
 
-  const fileRef = React.useRef();
+  const fileRef = useRef();
 
   return (
     <div className="chat">
@@ -209,21 +213,10 @@ const ChatWindow = ({
           </button>
         )}
       </div>
-      {previewImage && (
-        <div
-          className="image-preview-overlay"
-          onClick={() => setPreviewImage(null)}
-        >
-          <img
-            src={previewImage}
-            className="image-preview"
-            onClick={(e) => e.stopPropagation()}
-          />
-          <button className="close-btn" onClick={() => setPreviewImage(null)}>
-            ✕
-          </button>
-        </div>
-      )}
+      <ImagePreviewModal
+        src={previewImage}
+        onClose={() => setPreviewImage(null)}
+      />
     </div>
   );
 };

@@ -280,7 +280,6 @@ h2 {
   text-align: end;
   align-self: flex-end;
   justify-content: flex-end;
-  flex-direction: row-reverse;
 }
 
 .message-avatar {
@@ -400,7 +399,8 @@ h2 {
 
 .chat-image {
   max-width: 400px;
-  border-radius: 8px;
+  cursor: zoom-in;
+  border-radius: 10px;
 }
 
 .chat-video {
@@ -411,15 +411,10 @@ h2 {
 .chat-file {
   display: inline-block;
   padding: 12px 20px;
-  background: #747373;
+  background: #444444;
   border-radius: 6px;
   text-decoration: none;
   color: #ffffff;
-}
-.chat-image {
-  cursor: zoom-in;
-  max-width: 220px;
-  border-radius: 10px;
 }
 
 .image-preview-overlay {
