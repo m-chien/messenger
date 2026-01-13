@@ -161,4 +161,10 @@ public class UserService {
     }
 
 
+    public void setActiveStatus(int id, boolean isActive) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + id));
+        user.setIsOnline(isActive);
+        userRepository.save(user);
+    }
 }

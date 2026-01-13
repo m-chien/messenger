@@ -1,7 +1,6 @@
 package com.example.WebCloneMessenger.Controller;
 
 import com.example.WebCloneMessenger.DTO.MessageDTO;
-import com.example.WebCloneMessenger.DTO.MessageDetailProjection;
 import com.example.WebCloneMessenger.DTO.MessageResponseDTO;
 import com.example.WebCloneMessenger.service.MessageService;
 import jakarta.validation.Valid;
@@ -34,8 +33,8 @@ public class MessageResource {
     }
 
     @PostMapping
-    public ResponseEntity<Integer> createMessage(@RequestBody @Valid final MessageDTO messageDTO) {
-        final Integer createdId = messageService.create(messageDTO);
+    public ResponseEntity<MessageResponseDTO> createMessage(@RequestBody @Valid final MessageDTO messageDTO) {
+        final MessageResponseDTO createdId = messageService.create(messageDTO);
         return new ResponseEntity<>(createdId, HttpStatus.CREATED);
     }
 

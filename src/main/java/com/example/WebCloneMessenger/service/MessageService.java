@@ -23,6 +23,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -56,7 +57,7 @@ public class MessageService {
     }
 
     @Transactional
-    public Integer create(final MessageDTO messageDTO) {
+    public MessageResponseDTO create(final MessageDTO messageDTO) {
         Message message = messageMapper.toEntity(messageDTO);
 
         if (messageDTO.getUserId() == null) {
@@ -84,14 +85,34 @@ public class MessageService {
 
         Message savedMessage = messageRepository.save(message);
 
+        List<AttachmentDTO> attachmentDTOs = new ArrayList<>();
+
         if (messageDTO.getAttachments() != null) {
             for (AttachmentDTO a : messageDTO.getAttachments()) {
                 Attachment attachment = attachmentMapper.toEntity(a);
                 attachment.setIdmessage(savedMessage);
-                attachmentRepository.save(attachment);
+                Attachment savedAttachment = attachmentRepository.save(attachment);
+                AttachmentDTO attachmentDTO = attachmentMapper.toDto(savedAttachment);
+                attachmentDTO.setFileUrl(
+                        minioService.getPresignedUrl(attachment.getFileUrl())
+                );
+                attachmentDTOs.add(attachmentDTO);
             }
         }
-        return savedMessage.getId();
+
+
+        return MessageResponseDTO.builder()
+                .id(savedMessage.getId())
+                .type(savedMessage.getType())
+                .content(savedMessage.getContent())
+                .isPin(savedMessage.getIsPin())
+                .dateSend(savedMessage.getDateSend())
+                .userId(user.getId())
+                .isOnline(user.getIsOnline())
+                .userName(user.getName())
+                .avatarUrl(user.getAvatarUrl())
+                .attachments(attachmentDTOs)
+                .build();
     }
 
 
@@ -220,7 +241,7 @@ public class MessageService {
         return messageRepository.findMessageDetailById(idNewMessage);
     }
 
-    public void notifySidebarUsers(Integer roomId, MessageDetailProjection msg) {
+    public void notifySidebarUsers(Integer roomId, MessageResponseDTO msg) {
         // Lấy tất cả userId trong phòng (bao gồm người gửi). Bạn có thể bỏ người gửi nếu muốn.
         List<Integer> userIds = chatRoomUserRepository.findUserIdsByChatroom(roomId);
 
