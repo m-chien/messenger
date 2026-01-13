@@ -12,7 +12,6 @@ export function useChatWebSocket(
   const subscriptionChatRef = useRef(null);
   const subscriptionSidebarRef = useRef(null);
   const [messages, setMessages] = useState([]);
-  console.log("🚀 ~ useChatWebSocket ~ messages:", messages)
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
@@ -51,6 +50,8 @@ export function useChatWebSocket(
     });
 
     return () => {
+      if (subscriptionChatRef.current) subscriptionChatRef.current.unsubscribe(); 
+      if (subscriptionSidebarRef.current) subscriptionSidebarRef.current.unsubscribe();
       if (client && client.connected) client.disconnect();
     };
   }, [token, userId]); // Chỉ kết nối lại khi token hoặc userId thay đổi

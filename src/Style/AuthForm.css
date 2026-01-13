@@ -533,6 +533,7 @@ textarea.form-control:focus {
 }
 
 .preview-item {
+  padding: 5px;
   position: relative;
   background: #313131;
   border-radius: 8px;

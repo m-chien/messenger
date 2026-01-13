@@ -1,8 +1,9 @@
-import React, { useCallback, useRef, useState } from "react";
-import { Image, Info, Mic, Phone, Send, Smile, Video } from "lucide-react";
+import React, { useRef, useState } from "react";
+import { Image, Info, Phone, Send, Smile, Video } from "lucide-react";
 import { format, isToday } from "date-fns";
 import { vi } from "date-fns/locale";
 import ImagePreviewModal from "./ImagePreviewModal";
+import VoiceRecorder from "./VoiceRecoder";
 
 const ChatWindow = ({
   selectedChat,
@@ -53,6 +54,14 @@ const ChatWindow = ({
         <video controls className="chat-video">
           <source src={att.fileUrl} type={att.fileType} />
         </video>
+      );
+    }
+
+    if (att.fileType.startsWith("audio/")) {
+      return (
+        <audio controls className="chat-audio">
+          <source src={att.fileUrl} type={att.fileType} />
+        </audio>
       );
     }
 
@@ -175,15 +184,22 @@ const ChatWindow = ({
                     ✕
                   </button>
 
-                  {file.type.startsWith("image/") ? (
+                  {file.type.startsWith("image/") && (
                     <img
                       src={URL.createObjectURL(file)}
                       alt={file.name}
                       className="preview-image"
                     />
-                  ) : (
-                    <div className="preview-file">📎 {file.name}</div>
                   )}
+
+                  {file.type.startsWith("audio/") && (
+                    <audio controls src={URL.createObjectURL(file)} />
+                  )}
+
+                  {!file.type.startsWith("image/") &&
+                    !file.type.startsWith("audio/") && (
+                      <div className="preview-file">📎 {file.name}</div>
+                    )}
                 </div>
               ))}
             </div>
@@ -208,9 +224,9 @@ const ChatWindow = ({
             <Send size={20} />
           </button>
         ) : (
-          <button className="icon-btn">
-            <Mic size={20} />
-          </button>
+          <VoiceRecorder
+            onRecorded={(file) => setSelectedFiles((prev) => [...prev, file])}
+          />
         )}
       </div>
       <ImagePreviewModal
