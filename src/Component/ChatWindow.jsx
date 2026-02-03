@@ -14,6 +14,7 @@ const ChatWindow = ({
   handleSendMessage,
   selectedFiles,
   setSelectedFiles,
+  onStartCall,
 }) => {
   const canSend = messageInput.trim() !== "" || selectedFiles.length > 0;
   const [previewImage, setPreviewImage] = useState(null);
@@ -79,6 +80,8 @@ const ChatWindow = ({
 
   const fileRef = useRef();
 
+  /* Removed duplicate useCall */
+
   return (
     <div className="chat">
       <div className="chat-header">
@@ -90,10 +93,10 @@ const ChatWindow = ({
           </div>
         </div>
         <div className="chat-actions">
-          <button className="icon-btn">
+          <button className="icon-btn" onClick={() => onStartCall("AUDIO")}>
             <Phone size={20} />
           </button>
-          <button className="icon-btn">
+          <button className="icon-btn" onClick={() => onStartCall("VIDEO")}>
             <Video size={20} />
           </button>
           <button className="icon-btn">
@@ -177,7 +180,7 @@ const ChatWindow = ({
                     className="remove-file"
                     onClick={() =>
                       setSelectedFiles((prev) =>
-                        prev.filter((_, i) => i !== index)
+                        prev.filter((_, i) => i !== index),
                       )
                     }
                   >

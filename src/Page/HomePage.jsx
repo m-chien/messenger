@@ -5,6 +5,7 @@ import { useChatWebSocket } from "../Hook/useChatWebSocket.js";
 import useFetchAll from "../Hook/useFetchAll";
 import Sidebar from "../Component/Sidebar";
 import ChatWindow from "../Component/ChatWindow";
+import { useCall } from "../../features/call/CallProvider.jsx";
 import { api } from "../Api/Api.js";
 
 function HomePage() {
@@ -51,7 +52,7 @@ function HomePage() {
   const handleSidebarUpdate = useCallback((sidebarDto) => {
     setChatRooms((prevRooms) => {
       const idx = prevRooms.findIndex(
-        (r) => String(r.idChatroom) === String(sidebarDto.chatroomId)
+        (r) => String(r.idChatroom) === String(sidebarDto.chatroomId),
       );
 
       if (idx === -1) return prevRooms;
@@ -85,16 +86,16 @@ function HomePage() {
 
   // 4. Fetch tin nhắn lịch sử của phòng đang chọn
   const { data: messagesData } = useFetchAll(
-    selectedChat ? `/messages/chatroom/${selectedChat.idChatroom}` : null
+    selectedChat ? `/messages/chatroom/${selectedChat.idChatroom}` : null,
   );
-  console.log("🚀 ~ HomePage ~ messagesData:", messagesData)
+  console.log("🚀 ~ HomePage ~ messagesData:", messagesData);
 
   // 5. Khởi tạo WebSocket
   const { messages, sendMessage } = useChatWebSocket(
     selectedChat?.idChatroom,
     token,
     myUserId,
-    handleSidebarUpdate
+    handleSidebarUpdate,
   );
 
   const AllMessages = [...(messagesData || []), ...messages];
@@ -104,9 +105,12 @@ function HomePage() {
     if (!messageInput.trim() && selectedFiles.length === 0) return;
     // 1. Upload file
     const uploadedAttachments = await Promise.all(
-      selectedFiles.map(uploadFile)
+      selectedFiles.map(uploadFile),
     );
-    console.log("🚀 ~ handleSendMessage ~ uploadedAttachments:", uploadedAttachments)
+    console.log(
+      "🚀 ~ handleSendMessage ~ uploadedAttachments:",
+      uploadedAttachments,
+    );
 
     // 2. GỬI QUA WEBSOCKET (QUAN TRỌNG)
     sendMessage({
@@ -135,8 +139,8 @@ function HomePage() {
               isUnread: 0,
               unreadCount: 0,
             }
-          : r
-      )
+          : r,
+      ),
     );
   };
 
@@ -152,6 +156,14 @@ function HomePage() {
       fileName: res.data.fileName,
       fileSize: res.data.fileSize,
     };
+  };
+
+  const { startCall } = useCall();
+  const handleStartCall = (type) => {
+    if (!selectedChat) return;
+
+    const chatRoomId = selectedChat.idChatroom;
+    startCall(chatRoomId, type);
   };
 
   return (
@@ -173,6 +185,7 @@ function HomePage() {
         handleSendMessage={handleSendMessage}
         selectedFiles={selectedFiles}
         setSelectedFiles={setSelectedFiles}
+        onStartCall={handleStartCall}
       />
     </div>
   );

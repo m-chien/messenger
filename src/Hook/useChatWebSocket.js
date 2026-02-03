@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import SockJS from "sockjs-client";
-import { over } from "stompjs";
+import { useWebSocket } from "../Context/WebSocketContext";
 
 export function useChatWebSocket(
   selectedChatId,
@@ -8,62 +7,56 @@ export function useChatWebSocket(
   userId,
   onSidebarUpdate
 ) {
-  const stompClientRef = useRef(null);
+  const { client, connected } = useWebSocket();
   const subscriptionChatRef = useRef(null);
   const subscriptionSidebarRef = useRef(null);
   const [messages, setMessages] = useState([]);
-  const [connected, setConnected] = useState(false);
+  
+  // Ref to hold client for sendMessage usage
+  const internalClientRef = useRef(client);
+
+  useEffect(() => {
+    internalClientRef.current = client;
+  }, [client]);
 
   useEffect(() => {
     setMessages([]);
   }, [selectedChatId]);
 
-  // 1. Kết nối WebSocket
+  // 1. SUBSCRIBE KÊNH SIDEBAR (Luôn lắng nghe dù đang ở đâu)
   useEffect(() => {
-    if (!token) return;
+    if (!connected || !client || !userId || !onSidebarUpdate) return;
+    
+    // Hủy đăng ký cũ nếu có để tránh duplicate
+    if (subscriptionSidebarRef.current)
+        subscriptionSidebarRef.current.unsubscribe();
 
-    const sock = new SockJS("http://localhost:8080/ws");
-    const client = over(sock);
-    // Tắt log debug của stompjs cho đỡ rác console
-    client.debug = () => {};
-    stompClientRef.current = client;
-
-    client.connect({ Authorization: `Bearer ${token}` }, () => {
-      setConnected(true);
-
-      // 2. SUBSCRIBE KÊNH SIDEBAR (Luôn lắng nghe dù đang ở đâu)
-      if (userId && onSidebarUpdate) {
-        // Hủy đăng ký cũ nếu có để tránh duplicate
-        if (subscriptionSidebarRef.current)
-          subscriptionSidebarRef.current.unsubscribe();
-
-        subscriptionSidebarRef.current = client.subscribe(
-          `/topic/user/${userId}/sidebar`,
-          (response) => {
-            const sidebarDto = JSON.parse(response.body);
-            console.log("🚀 ~ useChatWebSocket ~ sidebarDto:", sidebarDto)
-            // Gọi callback để HomePage xử lý update UI
-            onSidebarUpdate(sidebarDto);
-          }
-        );
-      }
-    });
+    console.log("✅ Subscribing Sidebar channel:", `/topic/user/${userId}/sidebar`);
+    
+    subscriptionSidebarRef.current = client.subscribe(
+        `/topic/user/${userId}/sidebar`,
+        (response) => {
+        const sidebarDto = JSON.parse(response.body);
+        console.log("🚀 ~ useChatWebSocket ~ sidebarDto:", sidebarDto)
+        onSidebarUpdate(sidebarDto);
+        }
+    );
 
     return () => {
-      if (subscriptionChatRef.current) subscriptionChatRef.current.unsubscribe(); 
-      if (subscriptionSidebarRef.current) subscriptionSidebarRef.current.unsubscribe();
-      if (client && client.connected) client.disconnect();
+        if (subscriptionSidebarRef.current) subscriptionSidebarRef.current.unsubscribe();
     };
-  }, [token, userId]); // Chỉ kết nối lại khi token hoặc userId thay đổi
+  }, [connected, client, userId]);
 
   // 3. SUBSCRIBE KÊNH CHAT ROOM (Chỉ khi chọn phòng)
   useEffect(() => {
-    if (!connected || !selectedChatId || !stompClientRef.current) return;
+    if (!connected || !selectedChatId || !client) return;
 
     if (subscriptionChatRef.current) subscriptionChatRef.current.unsubscribe();
 
+    console.log("✅ Subscribing ChatRoom:", selectedChatId);
+
     // Lắng nghe tin nhắn chi tiết để hiện vào khung chat
-    subscriptionChatRef.current = stompClientRef.current.subscribe(
+    subscriptionChatRef.current = client.subscribe(
       `/topic/chatroom/${selectedChatId}`,
       (response) => {
         const msgBody = JSON.parse(response.body);
@@ -81,15 +74,17 @@ export function useChatWebSocket(
       if (subscriptionChatRef.current)
         subscriptionChatRef.current.unsubscribe();
     };
-  }, [selectedChatId, connected]);
+  }, [selectedChatId, connected, client]);
 
   const sendMessage = (messagePayload) => {
-    if (stompClientRef.current && stompClientRef.current.connected) {
-      stompClientRef.current.send(
+    if (internalClientRef.current && internalClientRef.current.connected) {
+      internalClientRef.current.send(
         `/app/chat.send/${messagePayload.chatroom}`,
         {},
         JSON.stringify(messagePayload)
       );
+    } else {
+        console.warn("⚠️ WebSocket not connected, cannot send message");
     }
   };
 
