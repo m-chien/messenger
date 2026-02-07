@@ -5,7 +5,7 @@ import com.example.WebCloneMessenger.DTO.UserDTO;
 import com.example.WebCloneMessenger.DTO.UserLoginRequest;
 import com.example.WebCloneMessenger.Exception.AppException;
 import com.example.WebCloneMessenger.Exception.ErrorCode;
-import com.example.WebCloneMessenger.Model.AuthProvider;
+import com.example.WebCloneMessenger.Enum.AuthProvider;
 import com.example.WebCloneMessenger.Model.User;
 import com.example.WebCloneMessenger.events.BeforeDeleteUser;
 import com.example.WebCloneMessenger.mapper.UserMapper;

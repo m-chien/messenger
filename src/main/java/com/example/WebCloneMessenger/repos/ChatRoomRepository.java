@@ -13,6 +13,10 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Integer> {
 
     ChatRoom findFirstByCreatorId(Integer id);
 
+    @Query("SELECT c FROM ChatRoom c LEFT JOIN FETCH c.idchatroomChatRoomUsers u LEFT JOIN FETCH u.iduser WHERE c.id = :id")
+    ChatRoom findWithUsersById(@Param("id") Integer id);
+
+
     ChatRoom findFirstByLastMessageId(Integer id);
 
     @Query(value = """
