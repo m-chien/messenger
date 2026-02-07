@@ -75,6 +75,7 @@ export function CallProvider({ children }) {
     state.setCallState("idle");
     state.setCallType(null);
     state.setRemoteUserId(null); // nếu bạn có field này trong state
+    state.setChatRoom(null);
     chatRoomIdRef.current = null;
     callTypeRef.current = null;
     remoteStreamRef.current = null;
@@ -106,6 +107,7 @@ export function CallProvider({ children }) {
           chatRoomIdRef.current = data.chatRoomId;
           callTypeRef.current = data.callType;
           state.setRemoteUserId(data.fromUserId || null);
+          state.setChatRoom(data.chatRoom || null);
           state.setCallType(data.callType || null);
           state.setCallState("incoming");
           ringtone.playRingtone(); // ✅ Phát chuông khi có cuộc gọi đến
@@ -186,11 +188,13 @@ export function CallProvider({ children }) {
   }, [client, userId]);
 
   /* ================= CALL ACTIONS (public API) ================= */
-  const startCall = async (chatRoomId, type) => {
+  const startCall = async (chatRoom, type) => {
+    const chatRoomId = chatRoom.idChatroom;
     chatRoomIdRef.current = chatRoomId;
     callTypeRef.current = type;
 
     state.setCallType(type);
+    state.setChatRoom(chatRoom);
     state.setCallState("outgoing");
 
     ringtone.playCallingTone(); // ✅ Phát chuông calling khi bắt đầu gọi
@@ -199,6 +203,11 @@ export function CallProvider({ children }) {
     sendSignal(client, {
       type: "call-request",
       chatRoomId,
+      chatRoom: {
+        id: chatRoom.idChatroom,
+        name: chatRoom.name,
+        logo: chatRoom.logo,
+      },
       callType: type,
     });
     // actual offer will be sent only after callee accepts (handled in call-response)

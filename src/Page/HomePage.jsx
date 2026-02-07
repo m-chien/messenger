@@ -162,8 +162,8 @@ function HomePage() {
   const handleStartCall = (type) => {
     if (!selectedChat) return;
 
-    const chatRoomId = selectedChat.idChatroom;
-    startCall(chatRoomId, type);
+    // const chatRoomId = selectedChat.idChatroom;
+    startCall(selectedChat, type);
   };
 
   return (

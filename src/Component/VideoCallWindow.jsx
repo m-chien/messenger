@@ -11,6 +11,7 @@ const VideoCallWindow = () => {
     toggleMic,
     toggleCamera,
     callType,
+    chatRoom,
   } = useCall();
 
   // Get stream from refs
@@ -71,7 +72,24 @@ const VideoCallWindow = () => {
             />
           ) : (
             <div className="audio-call-placeholder">
-              <div className="avatar-placeholder big">User</div>
+              <div className="avatar-placeholder big">
+                {chatRoom?.logo ? (
+                  <img
+                    src={`http://localhost:8080${chatRoom.logo}`}
+                    alt={chatRoom.name}
+                    className="call-avatar-img"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      borderRadius: "50%",
+                    }}
+                  />
+                ) : (
+                  chatRoom?.name?.charAt(0) || "U"
+                )}
+              </div>
+              <p>{chatRoom?.name || "Unknown User"}</p>
               <p>Voice Call in progress...</p>
             </div>
           )}

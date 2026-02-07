@@ -5,6 +5,7 @@ export function useCallState() {
   const [callState, setCallState] = useState("idle");
   const [callType, setCallType] = useState(null);
   const [remoteUserId, setRemoteUserId] = useState(null);
+  const [chatRoom, setChatRoom] = useState(null); // { id, name, logo }
   const [micEnabled, setMicEnabled] = useState(true);
   const [cameraEnabled, setCameraEnabled] = useState(true);
 
@@ -15,6 +16,8 @@ export function useCallState() {
     setCallType,
     remoteUserId,
     setRemoteUserId,
+    chatRoom,
+    setChatRoom,
     micEnabled,
     setMicEnabled,
     cameraEnabled,

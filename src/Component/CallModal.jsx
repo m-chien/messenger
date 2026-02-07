@@ -3,22 +3,31 @@ import { Phone, PhoneOff, Video } from "lucide-react";
 import { useCall } from "../../features/call/CallProvider.jsx";
 
 const CallModal = () => {
-  const { callState, caller, callType, acceptCall, rejectCall, endCall } = useCall();
+  const { callState, callType, chatRoom, acceptCall, rejectCall, endCall } =
+    useCall();
 
   if (callState === "idle" || callState === "incall") return null;
 
   const isIncoming = callState === "incoming";
+  const avatarUrl = chatRoom?.logo
+    ? `http://localhost:8080${chatRoom.logo}`
+    : "https://via.placeholder.com/100";
+  const displayName = chatRoom?.name || "Unknown User";
 
   return (
     <div className="call-modal-overlay">
       <div className="call-modal">
         <div className="call-avatar">
           <img
-            src="https://via.placeholder.com/100" // Replace with caller avatar if available
+            src={avatarUrl}
             alt="User"
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src = "https://via.placeholder.com/100";
+            }}
           />
         </div>
-        <h3>{caller?.name || "Unknown User"}</h3>
+        <h3>{displayName}</h3>
         <p>
           {isIncoming
             ? `Incoming ${callType === "VIDEO" ? "Video" : "Voice"} Call...`
