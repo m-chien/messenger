@@ -11,5 +11,6 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
 public class AuthResponse  {
     String token;
+    String refreshToken;
     UserDTO user;
 }

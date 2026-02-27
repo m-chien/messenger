@@ -30,40 +30,28 @@ public class JwtChannelInterceptor implements ChannelInterceptor {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
         if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
+
             List<String> authHeaders = accessor.getNativeHeader("Authorization");
             if (authHeaders == null || authHeaders.isEmpty()) {
-                authHeaders = accessor.getNativeHeader("authorization");
+                return null; // Không có token -> reject luôn
             }
 
-            if (authHeaders != null && !authHeaders.isEmpty()) {
-                try {
-                    String token = authHeaders.get(0).replace("Bearer ", "").trim();
-                    System.out.println("🔵 Decoding JWT token: " + token.substring(0, Math.min(20, token.length())) + "...");
+            try {
+                String token = authHeaders.get(0).replace("Bearer ", "").trim();
+                Jwt jwt = jwtDecoder.decode(token);
 
-                    Jwt jwt = jwtDecoder.decode(token);
-                    String userId = jwt.getSubject();
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(
+                                jwt.getSubject(),
+                                null,
+                                Collections.singletonList(new SimpleGrantedAuthority("USER"))
+                        );
 
-                    System.out.println("✅ JWT decoded successfully. UserId: " + userId);
+                accessor.setUser(authentication);
 
-                    // Tạo Authentication object
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    userId,
-                                    null,
-                                    Collections.singletonList(new SimpleGrantedAuthority("USER"))
-                            );
-
-                    // SET USER vào accessor
-                    accessor.setUser(authentication);
-
-                    System.out.println("✅ Principal set: " + accessor.getUser());
-
-                } catch (Exception ex) {
-                    System.err.println("❌ JWT decode failed: " + ex.getMessage());
-                    ex.printStackTrace();
-                }
-            } else {
-                System.err.println("❌ No Authorization header found");
+            } catch (Exception ex) {
+                System.err.println("JWT invalid or expired");
+                return null; // 🚨 Reject CONNECT
             }
         }
 

@@ -16,6 +16,7 @@ public class JwtAccessDeniedHandler implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
         ErrorCode errorCode = ErrorCode.ACCESS_DENIED;
+        System.out.println(errorCode.getHttpStatuscode().value());
         response.setStatus(errorCode.getHttpStatuscode().value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");

@@ -5,11 +5,13 @@ import com.example.WebCloneMessenger.DTO.GoogleLoginRequest;
 import com.example.WebCloneMessenger.DTO.UserDTO;
 import com.example.WebCloneMessenger.DTO.UserLoginRequest;
 import com.example.WebCloneMessenger.Exception.ApiResponse;
+import com.example.WebCloneMessenger.service.AuthService;
 import com.example.WebCloneMessenger.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -18,14 +20,12 @@ import java.util.List;
 
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping(value = "/users", produces = MediaType.APPLICATION_JSON_VALUE)
 public class UserResource {
 
     private final UserService userService;
-
-    public UserResource(final UserService userService) {
-        this.userService = userService;
-    }
+    private final AuthService authService;
 
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers() {
@@ -56,13 +56,38 @@ public class UserResource {
         return ResponseEntity.noContent().build();
     }
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody UserLoginRequest user) {
-        System.out.println(userService.Login(user));
-        return ResponseEntity.ok(userService.Login(user));
+    public ResponseEntity<AuthResponse> login(
+            @RequestBody UserLoginRequest user,
+            HttpServletResponse response) {
+
+        AuthResponse auth = authService.login(user);
+
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", auth.getRefreshToken())
+                .httpOnly(true)
+                .secure(false)
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite("Lax")
+                .build();
+        System.out.println("Cookie gửi về client: " + cookie.toString());
+        response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        System.out.println("Set-Cookie từ response header: " + response.getHeader(HttpHeaders.SET_COOKIE));
+
+        return ResponseEntity.ok(
+                AuthResponse.builder()
+                        .token(auth.getToken())
+                        .user(auth.getUser())
+                        .build()
+        );
     }
     @PostMapping("/auth/google")
     public AuthResponse loginGoogle(@RequestBody GoogleLoginRequest request) throws Exception {
-        return userService.loginWithGoogle(request.getIdToken());
+        return authService.loginWithGoogle(request.getIdToken());
+    }
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(@RequestBody String refreshToken) {
+        authService.logout(refreshToken);
+        return ResponseEntity.ok("Logged out successfully");
     }
     @PostMapping("/upAva")
     public ResponseEntity<ApiResponse<String>> updateAvatar(
@@ -86,5 +111,10 @@ public class UserResource {
                             .message("Lỗi khi cập nhật avatar: " + e.getMessage())
                             .build());
         }
+    }
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(HttpServletRequest request) {
+        System.out.println("gọi refresh token");
+        return ResponseEntity.ok(authService.refresh(request));
     }
 }
