@@ -1,80 +1,91 @@
-💬 Messenger Clone
+<h1 align="center">💬 Messenger Clone - Backend</h1>
 
-Real-time chat application built with Spring Boot and React.
+<p align="center">
+  Spring Boot REST API & WebSocket Server for Messenger Clone
+</p>
 
-🚀 Tech Stack
+<hr/>
 
-Spring Boot
+<h2>🚀 Tech Stack</h2>
 
-Spring Security (JWT)
+<ul>
+  <li><b>Spring Boot</b></li>
+  <li><b>Spring Security (JWT)</b></li>
+  <li><b>WebSocket</b></li>
+  <li><b>Redis</b></li>
+  <li><b>SQL Server</b></li>
+</ul>
 
-WebSocket
+<hr/>
 
-Redis
+<h2>📁 Important Structure</h2>
 
-SQL Server
+<pre>
+src/
+ └── main/
+      └── resources/
+           └── database/
+                └── init.sql
+</pre>
 
-React
+<hr/>
 
-📂 Project Structure
+<h2>🛠 Database Setup</h2>
 
-backend/
-├── src/
-│   └── main/
-│       └── resources/
-│           └── database/
-│               └── init.sql
-├── pom.xml
-└── ...
+<p><b>Requirement:</b> Install SQL Server (or SQL Server Express)</p>
 
-frontend/
-  ├── src/
-⚙️ Setup Database (SQL Server Required)
+<h3>Step 1: Create Database</h3>
 
-⚠️ You must install SQL Server (or SQL Server Express).
-
-Step 1: Create Database
-
-Open SQL Server Management Studio (SSMS)
-
-Run:
-
+<pre>
 CREATE DATABASE MessengerDB;
-Step 2: Run Database Script
+</pre>
 
-Open file:
+<h3>Step 2: Run Database Script</h3>
 
-backend/database/init.sql
+<p>Open file:</p>
 
-Copy all content → Paste into SSMS → Execute.
+<pre>
+src/main/resources/database/init.sql
+</pre>
 
-This will create:
+<p>
+Copy all content → Paste into SQL Server Management Studio (SSMS) → Click <b>Execute</b>
+</p>
 
-Tables
+<hr/>
 
-Relationships
+<h2>⚙️ Configure Application</h2>
 
-Required data structure
+<p>
+Update database connection in:
+</p>
 
-🖥 Run Backend
+<pre>
+src/main/resources/application.yaml
+</pre>
 
-Inside backend folder:
+<p>
+Make sure your username, password, and database name match your SQL Server configuration.
+</p>
 
+<hr/>
+
+<h2>▶ Run Backend</h2>
+
+<h3>Using Maven</h3>
+
+<pre>
+mvn spring-boot:run
+</pre>
+
+<h3>Or using Maven Wrapper</h3>
+
+<pre>
 ./mvnw spring-boot:run
+</pre>
 
-Backend runs at:
+<hr/>
 
-http://localhost:8080
-🌐 Run Frontend
-
-Inside frontend folder:
-
-npm install
-npm run dev
-
-Frontend runs at:
-
-http://localhost:3000
-👨‍💻 Author
-
-Spring Boot | Redis | SQL Server | React
+<p align="center">
+  🚀 Backend server runs by default at: <b>http://localhost:8080</b>
+</p>
