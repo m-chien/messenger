@@ -24,42 +24,41 @@ export function CallProvider({ children }) {
   const mic = useMicCamera();
   const ringtone = useRingtone();
 
-  const pcRef = useRef(null);
-  const iceQueue = useRef([]);
-  const remoteStreamRef = useRef(null);
-  const localStreamRef = useRef(null);
+  const peersRef = useRef({}); // Map: userId -> RTCPeerConnection
+  const iceQueue = useRef({}); // Map: userId -> Array of candidates
 
   // để lưu tạm chatRoomId / callType cho gửi signal
   const chatRoomIdRef = useRef(null);
   const callTypeRef = useRef(null);
 
-  const initPC = async () => {
-    // guard: nếu đã có pc thì thôi
-    if (pcRef.current) return pcRef.current;
+  // Helper to create a PC for a specific target user
+  const createPC = async (targetUserId) => {
+    if (peersRef.current[targetUserId]) return peersRef.current[targetUserId];
 
-    let stream;
-    try {
-      stream = await navigator.mediaDevices.getUserMedia({
-        video: state.callType === "VIDEO" || callTypeRef.current === "VIDEO",
-        audio: true,
-      });
-    } catch (err) {
-      console.error("getUserMedia failed", err);
-      throw err;
+    let stream = localStreamRef.current;
+    if (!stream) {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: state.callType === "VIDEO" || callTypeRef.current === "VIDEO",
+          audio: true,
+        });
+        localStreamRef.current = stream;
+      } catch (err) {
+        console.error("getUserMedia failed", err);
+        throw err;
+      }
     }
-
-    localStreamRef.current = stream;
 
     const pc = createWebRTC({
       onTrack: (s) => {
-        remoteStreamRef.current = s;
+        state.addRemoteStream(targetUserId, s);
       },
       onIce: (c) => {
-        // only send ICE when socket connected
         if (client?.connected) {
           sendSignal(client, {
             type: "candidate",
             chatRoomId: chatRoomIdRef.current,
+            toUserId: targetUserId, // Target specific user
             data: c,
           });
         }
@@ -67,18 +66,24 @@ export function CallProvider({ children }) {
     });
 
     await addLocalStream(pc, stream);
-    pcRef.current = pc;
+    peersRef.current[targetUserId] = pc;
     return pc;
   };
+
+  const localStreamRef = useRef(null);
+  // Remote stream management is now in state.remoteStreams
 
   const endCallCleanup = () => {
     state.setCallState("idle");
     state.setCallType(null);
-    state.setRemoteUserId(null); // nếu bạn có field này trong state
+    state.setRemoteUsers([]);
     state.setChatRoom(null);
+    state.setUserAccepted(false);
+    // Remove all remote streams - simplified by component unmount mostly, but good to ensure
+    // state.setRemoteStreams({}); // If exposed
+
     chatRoomIdRef.current = null;
     callTypeRef.current = null;
-    remoteStreamRef.current = null;
 
     try {
       // stop local tracks if any
@@ -86,27 +91,23 @@ export function CallProvider({ children }) {
       localStreamRef.current = null;
     } catch (e) {}
 
-    try {
-      // stop pc tracks as well
-      pcRef.current?.getSenders()?.forEach((s) => {
-        if (s.track) s.track.stop();
-      });
-    } catch (e) {}
-
-    pcRef.current?.close();
-    pcRef.current = null;
-    iceQueue.current = [];
+    // Close all PCs
+    Object.values(peersRef.current).forEach((pc) => pc.close());
+    peersRef.current = {};
+    iceQueue.current = {};
   };
 
   const handleSignal = async (data) => {
-    // data shape assumed: { type, chatRoomId, data }
     try {
+      const fromUserId = data.fromUserId;
+      // const toUserId = data.toUserId; // If backend forwards this, we can check if it's for us
+
       switch (data.type) {
         case "call-request":
-          // incoming call: set UI state, keep chatRoomId / callType
+          // incoming call: set UI state
           chatRoomIdRef.current = data.chatRoomId;
           callTypeRef.current = data.callType;
-          state.setRemoteUserId(data.fromUserId || null);
+          // state.setRemoteUsers([fromUserId]); // Maybe track the caller?
           state.setChatRoom(data.chatRoom || null);
           state.setCallType(data.callType || null);
           state.setCallState("incoming");
@@ -114,59 +115,83 @@ export function CallProvider({ children }) {
           break;
 
         case "call-response":
-          // remote accepted/rejected our call-request
+          // Only the Caller (outgoing) cares about this, or other participants in Mesh
+          // If we are "incoming", we ignore it (Auto-accept fix)
+          if (state.callState === "incoming") {
+             // console.log("Ignoring call-response because I am also an incoming callee");
+             return;
+          }
+
           if (data.data === "accepted") {
-            ringtone.stopCallingTone(); // ✅ Dừng chuông calling khi được chấp nhận
-            state.setCallState("incall");
-            // caller side: create pc and send offer
-            await initPC();
-            const offer = await makeOffer(pcRef.current);
-            sendSignal(client, {
-              type: "offer",
-              chatRoomId: chatRoomIdRef.current,
-              data: offer,
-            });
+             // A participant accepted.
+             ringtone.stopCallingTone();
+             state.setCallState("incall");
+
+             // Create PC for this specific user
+             const pc = await createPC(fromUserId);
+             const offer = await makeOffer(pc);
+             
+             sendSignal(client, {
+               type: "offer",
+               chatRoomId: chatRoomIdRef.current,
+               toUserId: fromUserId, // Send offer ONLY to this user
+               data: offer,
+             });
           } else {
             // rejected
-            ringtone.stopCallingTone(); // ✅ Dừng chuông calling khi bị từ chối
-            endCallCleanup();
+            // For now, keep simple log
+            console.log(`User ${fromUserId} rejected`);
           }
           break;
 
         case "offer":
-          // remote sent offer -> we are answerer
-          // ensure pc exists (and local stream added)
-          await initPC();
-          // makeAnswer will setRemoteDescription(offer) and create/set local answer
-          const answer = await makeAnswer(pcRef.current, data.data);
-          // flush any buffered ICE
-          await flushCandidates(pcRef.current, iceQueue.current);
-          // send answer
+          // Verify if this offer is for ME
+          if (data.toUserId && String(data.toUserId) !== String(userId)) return;
+
+          // We are answerer for this specific connection
+          const pcOffer = await createPC(fromUserId);
+          const answer = await makeAnswer(pcOffer, data.data);
+          
+          // flush buffered ICE
+          const queue = iceQueue.current[fromUserId] || [];
+          await flushCandidates(pcOffer, queue);
+          delete iceQueue.current[fromUserId];
+
           sendSignal(client, {
-            type: "answer",
-            chatRoomId: data.chatRoomId || chatRoomIdRef.current,
-            data: answer,
+             type: "answer",
+             chatRoomId: chatRoomIdRef.current,
+             toUserId: fromUserId,
+             data: answer,
           });
+          
+          // Ensure we are in incall state
+          if (state.callState !== "incall") {
+             state.setCallState("incall");
+             ringtone.stopRingtone();
+          }
           break;
 
         case "answer":
-          // caller receives answer
-          if (pcRef.current) {
-            await applyAnswer(pcRef.current, data.data);
-            await flushCandidates(pcRef.current, iceQueue.current);
-          } else {
-            // no pc yet -> this is abnormal but buffer answer? (rare)
-            console.warn("Received answer but pc not created yet");
+          if (data.toUserId && String(data.toUserId) !== String(userId)) return;
+          
+          const pcAnswer = peersRef.current[fromUserId];
+          if (pcAnswer) {
+            await applyAnswer(pcAnswer, data.data);
+            const queue = iceQueue.current[fromUserId] || [];
+            await flushCandidates(pcAnswer, queue);
+            delete iceQueue.current[fromUserId];
           }
           break;
 
         case "candidate":
-          // ICE candidate from remote
-          // If pc doesn't exist yet, buffer candidate
-          if (!pcRef.current) {
-            iceQueue.current.push(data.data);
+          if (data.toUserId && String(data.toUserId) !== String(userId)) return;
+
+          const pcIce = peersRef.current[fromUserId];
+          if (pcIce) {
+             await addCandidate(pcIce, data.data, []); 
           } else {
-            await addCandidate(pcRef.current, data.data, iceQueue.current);
+             if (!iceQueue.current[fromUserId]) iceQueue.current[fromUserId] = [];
+             iceQueue.current[fromUserId].push(data.data);
           }
           break;
 
@@ -193,13 +218,13 @@ export function CallProvider({ children }) {
     chatRoomIdRef.current = chatRoomId;
     callTypeRef.current = type;
 
-    state.setCallType(type);
     state.setChatRoom(chatRoom);
+    state.setCallType(type);
     state.setCallState("outgoing");
 
     ringtone.playCallingTone(); // ✅ Phát chuông calling khi bắt đầu gọi
 
-    // First, let the callee know we want to call
+    // Broadcast call request to room
     sendSignal(client, {
       type: "call-request",
       chatRoomId,
@@ -210,15 +235,25 @@ export function CallProvider({ children }) {
       },
       callType: type,
     });
-    // actual offer will be sent only after callee accepts (handled in call-response)
   };
 
   const acceptCall = async () => {
     // user accepts incoming call
     ringtone.stopRingtone(); // ✅ Dừng chuông ringtone khi chấp nhận cuộc gọi
+    state.setUserAccepted(true);
     state.setCallState("incall");
-    // create pc early (so it can gather local ICE)
-    await initPC();
+    
+    // Ensure we have local stream ready
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: state.callType === "VIDEO" || callTypeRef.current === "VIDEO",
+          audio: true,
+        });
+        localStreamRef.current = stream;
+    } catch(e) {
+        console.error("Failed to get local stream", e);
+    }
+
     // notify caller
     sendSignal(client, {
       type: "call-response",
@@ -251,7 +286,7 @@ export function CallProvider({ children }) {
       value={{
         ...state,
         ...mic,
-        remoteStreamRef,
+        // remoteStreamRef, // REMOVED
         localStreamRef,
         startCall,
         acceptCall,

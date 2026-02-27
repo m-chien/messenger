@@ -1,8 +1,8 @@
-import { api, authapi } from "../Api/Api";
+import { api } from "../Api/Api";
 
 export const userService = {
   login: async (email, password) => {
-    const res = await authapi.post("/users/login", {
+    const res = await api.post("/users/login", {
       email: email,
       pass: password,
     });
@@ -11,7 +11,7 @@ export const userService = {
     return res.data;
   },
   loginGG: async (idToken) => {
-    const res = await authapi.post("/users/auth/google", {
+    const res = await api.post("/users/auth/google", {
       idToken: idToken,
     });
     sessionStorage.setItem("accessToken", res.data.token);
