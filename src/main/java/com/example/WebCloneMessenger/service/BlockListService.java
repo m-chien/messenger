@@ -89,4 +89,8 @@ public class BlockListService {
         }
     }
 
+    public boolean checkBlock(String id, int targetUserId) {
+        Integer currentUserId = Integer.parseInt(id);
+        return blockListRepository.existsByBlocker_IdAndBlocked_Id(currentUserId, targetUserId);
+    }
 }

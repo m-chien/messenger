@@ -76,6 +76,7 @@ public class UserResource {
         return ResponseEntity.ok(
                 AuthResponse.builder()
                         .token(auth.getToken())
+                        .refreshToken(auth.getRefreshToken())
                         .user(auth.getUser())
                         .build()
         );

@@ -1,19 +1,21 @@
 package com.example.WebCloneMessenger.Controller;
 
 import com.example.WebCloneMessenger.DTO.FriendRequestDTO;
+import com.example.WebCloneMessenger.DTO.FriendRequestDetailDTO;
 import com.example.WebCloneMessenger.Model.FriendRequest;
 import com.example.WebCloneMessenger.service.FriendRequestService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 
 @RestController
-@RequestMapping(value = "/api/friendRequests", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(value = "/friendRequests", produces = MediaType.APPLICATION_JSON_VALUE)
 public class FriendRequestResource {
 
     private final FriendRequestService friendRequestService;
@@ -54,8 +56,9 @@ public class FriendRequestResource {
     }
 
     @GetMapping("/friendRequestsForUser")
-    public ResponseEntity<List<FriendRequestDTO>> getFriendRequestsForUser(
-            @RequestParam(name = "userId") final Integer userId) {
-        return ResponseEntity.ok(friendRequestService.GetAllByAcceptedFriendRequests(userId));
+    public ResponseEntity<List<FriendRequestDetailDTO>> getFriendRequestsForUser(
+            Authentication authentication) {
+        int userId = Integer.parseInt(authentication.getName());
+        return ResponseEntity.ok(friendRequestService.GetAllByAcceptedFriendRequestsWithDetails(userId));
     }
 }

@@ -15,7 +15,7 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequest, In
     FriendRequest findFirstBySenderId(Integer id);
 
     @Query("SELECT fr FROM FriendRequest fr WHERE fr.status = :status " +
-            "AND (fr.receiver.id = :userId OR fr.sender.id = :userId)")
+            "AND fr.receiver.id = :userId")
     List<FriendRequest> findAcceptedFriendRequests(@Param("userId") Integer userId, @Param("status") String status);
 
 }

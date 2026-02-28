@@ -1,6 +1,7 @@
 package com.example.WebCloneMessenger.service;
 
 import com.example.WebCloneMessenger.DTO.FriendRequestDTO;
+import com.example.WebCloneMessenger.DTO.FriendRequestDetailDTO;
 import com.example.WebCloneMessenger.Model.FriendRequest;
 import com.example.WebCloneMessenger.Model.User;
 import com.example.WebCloneMessenger.events.BeforeDeleteUser;
@@ -56,10 +57,11 @@ public class FriendRequestService {
                 .orElseThrow(NotFoundException::new);
         friendRequestRepository.delete(friendRequest);
     }
-    public List<FriendRequestDTO> GetAllByAcceptedFriendRequests(final Integer receiverId) {
-        return friendRequestRepository.findAcceptedFriendRequests(receiverId, "accepted")
+
+    public List<FriendRequestDetailDTO> GetAllByAcceptedFriendRequestsWithDetails(final Integer receiverId) {
+        return friendRequestRepository.findAcceptedFriendRequests(receiverId, "pending")
                 .stream()
-                .map(friendRequestMapper::friendRequestToFriendRequestDTO)
+                .map(this::mapToDetailDTO)
                 .toList();
     }
 
@@ -85,6 +87,24 @@ public class FriendRequestService {
                 .orElseThrow(() -> new NotFoundException("sender not found"));
         friendRequest.setSender(sender);
         return friendRequest;
+    }
+
+    private FriendRequestDetailDTO mapToDetailDTO(final FriendRequest friendRequest) {
+        FriendRequestDetailDTO dto = new FriendRequestDetailDTO();
+        dto.setRequestId(friendRequest.getId());
+        dto.setDateSend(friendRequest.getDateSend());
+        dto.setStatus(friendRequest.getStatus());
+
+        if (friendRequest.getSender() != null) {
+            User sender = friendRequest.getSender();
+            dto.setSenderId(sender.getId());
+            dto.setSenderName(sender.getName());
+            dto.setSenderEmail(sender.getEmail());
+            dto.setSenderAvatarUrl(sender.getAvatarUrl());
+            dto.setSenderIsOnline(sender.getIsOnline());
+        }
+
+        return dto;
     }
 
     @EventListener(BeforeDeleteUser.class)

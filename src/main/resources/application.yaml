@@ -1,9 +1,11 @@
 spring:
   datasource:
-    url: jdbc:sqlserver://localhost:1433;databaseName=Messenger;encrypt=false
+    url: jdbc:sqlserver://DESKTOP-ER8LV7D;databaseName=Messenger;encrypt=false
     username: sa
     password: 1234
-
+  sql:
+    init:
+      mode: never
   jpa:
     show-sql: true
     hibernate:

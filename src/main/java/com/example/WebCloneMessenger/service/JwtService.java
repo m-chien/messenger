@@ -22,7 +22,7 @@ public class JwtService {
     @NonFinal
     @Value("${jwt.secretkey}")
     private String secretKey;
-    private final long expirationMs = 2000;
+    private final long expirationMs = 50000;
     private final long refreshExpirationDays = 7;
     private final StringRedisTemplate stringRedisTemplate;
 

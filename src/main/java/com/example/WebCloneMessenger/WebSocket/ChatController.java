@@ -19,6 +19,7 @@ import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import java.security.Principal;
+import java.sql.SQLException;
 
 @Controller
 @RequiredArgsConstructor
@@ -33,7 +34,7 @@ public class ChatController {
             @DestinationVariable Integer roomId,
             MessageDTO message,
             Principal principal
-    ) {
+    ) throws SQLException {
         if (principal == null) {
             throw new AppException(ErrorCode.INVALID_WEBSOCKET_MESSAGE);
         }

@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLException;
 import java.util.List;
 
 
@@ -33,7 +34,7 @@ public class MessageResource {
     }
 
     @PostMapping
-    public ResponseEntity<MessageResponseDTO> createMessage(@RequestBody @Valid final MessageDTO messageDTO) {
+    public ResponseEntity<MessageResponseDTO> createMessage(@RequestBody @Valid final MessageDTO messageDTO) throws SQLException {
         final MessageResponseDTO createdId = messageService.create(messageDTO);
         return new ResponseEntity<>(createdId, HttpStatus.CREATED);
     }

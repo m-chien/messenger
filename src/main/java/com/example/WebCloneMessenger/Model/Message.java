@@ -79,4 +79,22 @@ public class Message {
     @OneToMany(mappedBy = "message")
     private Set<Reaction> messageReactions = new HashSet<>();
 
+    @Override
+    public String toString() {
+        return "Message{" +
+                "id=" + id +
+                ", type='" + type + '\'' +
+                ", dateSend=" + dateSend +
+                ", content='" + content + '\'' +
+                ", isPin=" + isPin +
+                ", idUser=" + idUser +
+                ", chatroom=" + chatroom +
+                ", replyMessage=" + replyMessage +
+                ", replyMessageMessages=" + replyMessageMessages +
+                ", lastMessageChatRooms=" + lastMessageChatRooms +
+                ", lastSeenMessageChatRoomUsers=" + lastSeenMessageChatRoomUsers +
+                ", idmessageAttachments=" + idmessageAttachments +
+                ", messageReactions=" + messageReactions +
+                '}';
+    }
 }

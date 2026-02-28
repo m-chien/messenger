@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -51,5 +52,9 @@ public class BlockListResource {
         blockListService.delete(id);
         return ResponseEntity.noContent().build();
     }
-
+    @PostMapping("/check-block")
+    public ResponseEntity<Boolean> checkBlock(Authentication authentication, @RequestParam int targetUserId) {
+        boolean isBlocked = blockListService.checkBlock(authentication.getName(), targetUserId);
+        return ResponseEntity.ok(isBlocked);
+    }
 }
