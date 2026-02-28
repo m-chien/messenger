@@ -39,6 +39,7 @@ const ChatWindow = ({
   };
 
   const renderAttachment = React.useCallback((att) => {
+    console.log("Rendering attachment:", att);
     if (att.fileType.startsWith("image/")) {
       return (
         <img

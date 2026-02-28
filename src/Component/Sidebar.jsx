@@ -19,6 +19,7 @@ const Sidebar = ({
   chatRooms,
   selectedChat,
   onSelectChat,
+  onShowFriends,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
 
@@ -50,11 +51,21 @@ const Sidebar = ({
                   <Settings size={18} />
                   <span>Tùy chọn</span>
                 </button>
-                <button>
+                <button
+                  onClick={() => {
+                    onShowFriends("friends");
+                    setShowMenu(false);
+                  }}
+                >
                   <Users size={18} />
                   <span>Danh sách bạn bè</span>
                 </button>
-                <button>
+                <button
+                  onClick={() => {
+                    onShowFriends("requests");
+                    setShowMenu(false);
+                  }}
+                >
                   <UserPlus size={18} />
                   <span>Kết bạn</span>
                 </button>

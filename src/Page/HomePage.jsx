@@ -5,6 +5,7 @@ import { useChatWebSocket } from "../Hook/useChatWebSocket.js";
 import useFetchAll from "../Hook/useFetchAll";
 import Sidebar from "../Component/Sidebar";
 import ChatWindow from "../Component/ChatWindow";
+import FriendsPage from "./FriendsPage";
 import { useCall } from "../../features/call/CallProvider.jsx";
 import { api } from "../Api/Api.js";
 
@@ -12,6 +13,7 @@ function HomePage() {
   const token = sessionStorage.getItem("accessToken");
   const { theme, toggleTheme } = useTheme();
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [currentView, setCurrentView] = useState("chat"); // "chat" or "friends" or "requests"
 
   // State
   const [selectedChat, setSelectedChat] = useState(null);
@@ -166,6 +168,10 @@ function HomePage() {
     startCall(selectedChat, type);
   };
 
+  const handleShowFriends = (viewType) => {
+    setCurrentView(viewType === "friends" ? "friends" : "requests");
+  };
+
   return (
     <div className="messenger">
       <Sidebar
@@ -174,19 +180,24 @@ function HomePage() {
         chatRooms={chatRooms}
         selectedChat={selectedChat}
         onSelectChat={handleChatRoomSelect}
+        onShowFriends={handleShowFriends}
       />
 
-      <ChatWindow
-        selectedChat={selectedChat}
-        messages={AllMessages}
-        myUserId={myUserId}
-        messageInput={messageInput}
-        setMessageInput={setMessageInput}
-        handleSendMessage={handleSendMessage}
-        selectedFiles={selectedFiles}
-        setSelectedFiles={setSelectedFiles}
-        onStartCall={handleStartCall}
-      />
+      {currentView === "chat" ? (
+        <ChatWindow
+          selectedChat={selectedChat}
+          messages={AllMessages}
+          myUserId={myUserId}
+          messageInput={messageInput}
+          setMessageInput={setMessageInput}
+          handleSendMessage={handleSendMessage}
+          selectedFiles={selectedFiles}
+          setSelectedFiles={setSelectedFiles}
+          onStartCall={handleStartCall}
+        />
+      ) : (
+        <FriendsPage onBackToChat={() => setCurrentView("chat")} />
+      )}
     </div>
   );
 }
