@@ -1,16 +1,80 @@
-# React + Vite
+<h1 align="center">💬 Messenger Clone - Frontend</h1>
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<p align="center">
+  React Client for Messenger Clone Application
+</p>
 
-Currently, two official plugins are available:
+<hr/>
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+<h2>🚀 Tech Stack</h2>
 
-## React Compiler
+<ul>
+  <li><b>React</b></li>
+  <li><b>Axios</b> (API calls)</li>
+  <li><b>WebSocket / SockJS</b></li>
+  <li><b>JWT Authentication</b></li>
+</ul>
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+<hr/>
 
-## Expanding the ESLint configuration
+<h2>📁 Project Structure</h2>
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+<pre>
+src/
+ ├── components/
+ ├── pages/
+ ├── services/
+ ├── utils/
+ └── App.js
+</pre>
+
+<hr/>
+
+<h2>⚙️ Configuration</h2>
+
+<p>
+Make sure the backend server is running at:
+</p>
+
+<pre>
+http://localhost:8080
+</pre>
+
+<p>
+If needed, update the API base URL inside your configuration file or API service file.
+</p>
+
+<hr/>
+
+<h2>📦 Install Dependencies</h2>
+
+<pre>
+npm install
+</pre>
+
+<hr/>
+
+<h2>▶ Run Frontend</h2>
+
+<pre>
+npm start
+</pre>
+
+<p align="center">
+  🌐 Frontend runs by default at: <b>http://localhost:3000</b>
+</p>
+
+<hr/>
+
+<h2>🔐 Notes</h2>
+
+<ul>
+  <li>Backend must be running before starting frontend.</li>
+  <li>Make sure SQL Server database is configured correctly in backend.</li>
+</ul>
+
+<hr/>
+
+<p align="center">
+  ✨ React UI for real-time chat application
+</p>
