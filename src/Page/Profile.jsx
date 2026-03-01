@@ -1,4 +1,4 @@
-import { ArrowLeft, Calendar, Edit2, LogOut, Mail, Phone, ArrowLeftCircle, UserPlus, MessageCircle } from "lucide-react";
+import { ArrowLeft, Calendar, Edit2, LogOut, Mail, Phone, ArrowLeftCircle, UserPlus, MessageCircle, MoreVertical } from "lucide-react";
 import React, { useState, useEffect } from "react";
 import { FastAverageColor } from "fast-average-color";
 import { api } from "../Api/Api";
@@ -27,20 +27,22 @@ export const Profile = ({ userData, onLogout, onUpdateProfile, isOtherProfile = 
   const [containerStyle, setContainerStyle] = useState({});
 
   // States for dynamic profile actions
-  const [isFriend, setIsFriend] = useState(false);
   const [mutualFriends, setMutualFriends] = useState([]);
   const [loadingExtra, setLoadingExtra] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+
+  const handleBlockUser = () => {
+    // TODO: implement actual block API call
+    alert("Đã chặn user này!");
+    setShowMenu(false);
+  };
 
   useEffect(() => {
     if (isOtherProfile && userData?.userId) {
       const fetchExtraProfileData = async () => {
         setLoadingExtra(true);
         try {
-          // 1. Check friendship status
-          const friendRes = await api.get(`/friends/check?userID2=${userData.userId}`);
-          setIsFriend(friendRes.data === true);
-
-          // 2. Fetch mutual friends
+          // Fetch mutual friends
           const mutualRes = await api.get(`/friends/mutual?userID2=${userData.userId}`);
           setMutualFriends(mutualRes.data || []);
         } catch (error) {
@@ -137,7 +139,7 @@ export const Profile = ({ userData, onLogout, onUpdateProfile, isOtherProfile = 
         {/* Header */}
         <div 
           className="profile-header"
-          style={headerBg ? { background: headerBg } : {}}
+          style={headerBg ? { background: headerBg, position: 'relative' } : { position: 'relative' }}
         >
           {isOtherProfile && onBack && (
             <button 
@@ -148,6 +150,51 @@ export const Profile = ({ userData, onLogout, onUpdateProfile, isOtherProfile = 
             >
               <ArrowLeft size={24} />
             </button>
+          )}
+
+          {isOtherProfile && (
+            <div style={{ position: 'absolute', top: '20px', right: '20px', zIndex: 10 }}>
+              <button 
+                onClick={() => setShowMenu(!showMenu)}
+                style={{ background: 'rgba(0,0,0,0.2)', border: 'none', color: '#fff', cursor: 'pointer', padding: '5px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                title="Tùy chọn"
+              >
+                <MoreVertical size={20} />
+              </button>
+              {showMenu && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  marginTop: '8px',
+                  backgroundColor: '#2a2b36',
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+                  minWidth: '150px',
+                  overflow: 'hidden',
+                  zIndex: 20
+                }}>
+                  <button 
+                    onClick={handleBlockUser}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      textAlign: 'left',
+                      background: 'none',
+                      border: 'none',
+                      color: '#ff4d4f',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      transition: 'background 0.2s',
+                    }}
+                    onMouseOver={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                    onMouseOut={(e) => e.target.style.background = 'none'}
+                  >
+                    Chặn user này
+                  </button>
+                </div>
+              )}
+            </div>
           )}
 
           <div 
@@ -349,7 +396,7 @@ export const Profile = ({ userData, onLogout, onUpdateProfile, isOtherProfile = 
                      <button className="form-button" disabled style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.1)' }}>
                        Đang tải...
                      </button>
-                  ) : isFriend ? (
+                  ) :
                     <button
                       className="form-button"
                       style={{ flex: 1 }}
@@ -361,26 +408,7 @@ export const Profile = ({ userData, onLogout, onUpdateProfile, isOtherProfile = 
                       <MessageCircle size={18} className="btn-icon" />
                       Nhắn tin
                     </button>
-                  ) : (
-                    <button
-                      className="form-button"
-                      style={{ flex: 1, background: 'linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%)' }}
-                      onClick={async () => {
-                        try {
-                           setLoadingExtra(true);
-                           await api.post(`/friends/add?userID1=${JSON.parse(localStorage.getItem('user')).userId}&userID2=${userData.userId}`);
-                           setIsFriend(true);
-                        } catch(e) {
-                           console.error("Add friend failed", e);
-                        } finally {
-                           setLoadingExtra(false);
-                        }
-                      }}
-                    >
-                      <UserPlus size={18} className="btn-icon" />
-                      Kết bạn
-                    </button>
-                  )}
+                  }
                  </div>
               ) : (
                 <div className="profile-actions">

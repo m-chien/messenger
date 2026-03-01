@@ -3,11 +3,15 @@
 
 .auth-container {
   display: flex;
+  width: 100%;
+  flex: 1;
   height: 100vh;
+  justify-content: center;
   background: var(--auth-bg, radial-gradient(circle at top left, #1a1c2e 0%, #0f1016 100%));
   color: #ffffff;
   position: relative;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
   font-family: "Outfit", sans-serif;
 }
 

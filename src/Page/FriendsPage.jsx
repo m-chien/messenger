@@ -6,15 +6,16 @@ import {
   Search,
   Users,
   ArrowLeft,
+  Globe,
 } from "lucide-react";
 import useFetchAll from "../Hook/useFetchAll";
 import { api } from "../Api/Api.js";
 import "./../Style/FriendsPage.css";
 import { Profile } from "./Profile"; // Import Profile component
 
-function FriendsPage({ onBackToChat }) {
+function FriendsPage({ onBackToChat, defaultTab = "friends" }) {
   const token = sessionStorage.getItem("accessToken");
-  const [activeTab, setActiveTab] = useState("friends"); // "friends" or "requests"
+  const [activeTab, setActiveTab] = useState(defaultTab); // "friends" or "requests" or "add"
   const [searchQuery, setSearchQuery] = useState("");
   const [friends, setFriends] = useState([]);
   const [friendRequests, setFriendRequests] = useState([]);
@@ -22,6 +23,10 @@ function FriendsPage({ onBackToChat }) {
   
   // Thêm state lưu người bạn đang được chọn để xem profile
   const [selectedProfile, setSelectedProfile] = useState(null);
+
+  useEffect(() => {
+    setActiveTab(defaultTab);
+  }, [defaultTab]);
 
   // Lấy userId từ token
   const myUserId = useMemo(() => {
@@ -44,6 +49,12 @@ function FriendsPage({ onBackToChat }) {
   const { data: requestsData, refetch: refetchRequests } = useFetchAll(
     "friendRequests/friendRequestsForUser",
   );
+
+  // Fetch TẤT CẢ user (trừ bản thân)
+  const { data: allUsersData } = useFetchAll("/users");
+  const allUsers = useMemo(() => {
+    return (allUsersData || []).filter(u => u.id !== myUserId);
+  }, [allUsersData, myUserId]);
 
   useEffect(() => {
     if (friendsData) {
@@ -68,6 +79,12 @@ function FriendsPage({ onBackToChat }) {
     (request) =>
       request.senderName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       request.senderEmail?.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
+  const filteredAllUsers = allUsers.filter(
+    (u) =>
+      u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.email?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   // Hàm chấp nhận yêu cầu kết bạn
@@ -198,6 +215,13 @@ function FriendsPage({ onBackToChat }) {
             <span className="tab-count">{friendRequests.length}</span>
           )}
         </button>
+        <button
+          className={`tab-btn ${activeTab === "add" ? "active" : ""}`}
+          onClick={() => setActiveTab("add")}
+        >
+          <Globe size={18} />
+          Khám phá
+        </button>
       </div>
 
       <div className="friends-content">
@@ -302,11 +326,56 @@ function FriendsPage({ onBackToChat }) {
               </div>
             ) : (
               <div className="empty-state">
-                <p>
-                  {searchQuery
-                    ? "Không tìm thấy yêu cầu nào"
-                    : "Bạn không có yêu cầu kết bạn nào"}
-                </p>
+                <div className="empty-icon">
+                  <UserPlus size={48} />
+                </div>
+                <h3>Không có yêu cầu kết bạn</h3>
+                <p>Khi có người gửi yêu cầu kết bạn, nó sẽ xuất hiện ở đây.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB TÌM BẠN MỚI (GLOBAL KHÁM PHÁ) */}
+        {activeTab === "add" && (
+          <div className="friends-list">
+            {filteredAllUsers.length > 0 ? (
+              <div className="friends-grid">
+                {filteredAllUsers.map((userObj) => (
+                  <div 
+                    key={userObj.id} 
+                    className="friend-card" 
+                    onClick={() => handleProfileClick({ ...userObj, userId: userObj.id })}
+                    style={{ cursor: "pointer" }}
+                    title="Xem trang cá nhân"
+                  >
+                    <div className="friend-avatar">
+                      {userObj.avatarUrl ? (
+                        <img 
+                          src={`http://localhost:8080${userObj.avatarUrl}`} 
+                          alt={userObj.name} 
+                        />
+                      ) : (
+                        <div className="avatar-placeholder">
+                          {userObj.name?.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      {userObj.isOnline && <span className="status-indicator online"></span>}
+                    </div>
+                    <div className="friend-info">
+                      <h3>{userObj.name}</h3>
+                      <p>{userObj.email}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="empty-state">
+                <div className="empty-icon">
+                  <Globe size={48} />
+                </div>
+                <h3>Không tìm thấy người dùng</h3>
+                <p>Thử tìm kiếm với từ khóa khác.</p>
               </div>
             )}
           </div>

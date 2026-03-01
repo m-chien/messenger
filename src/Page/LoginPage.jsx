@@ -112,6 +112,7 @@ export const LoginPage = ({ onSwitchToRegister }) => {
               const idToken = res.credential;
               console.log("ID TOKEN:", idToken);
               const data = await userService.loginGG(idToken);
+              naviagte("/home");
               console.log("🚀 ~ LoginPage ~ data:", data);
             }}
             onError={() => {

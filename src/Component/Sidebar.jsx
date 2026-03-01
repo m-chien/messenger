@@ -7,6 +7,7 @@ import {
   Settings,
   Shield,
   Sun,
+  User,
   UserPlus,
   Users,
   UserX,
@@ -62,14 +63,28 @@ const Sidebar = ({
                 </button>
                 <button
                   onClick={() => {
-                    onShowFriends("requests");
+                    onShowFriends("profile");
+                    setShowMenu(false);
+                  }}
+                >
+                  <User size={18} />
+                  <span>Hồ sơ của tôi</span>
+                </button>
+                <button
+                  onClick={() => {
+                    onShowFriends("add");
                     setShowMenu(false);
                   }}
                 >
                   <UserPlus size={18} />
                   <span>Kết bạn</span>
                 </button>
-                <button>
+                <button
+                  onClick={() => {
+                    onShowFriends("restricted");
+                    setShowMenu(false);
+                  }}
+                >
                   <UserX size={18} />
                   <span>Tài khoản đã hạn chế</span>
                 </button>

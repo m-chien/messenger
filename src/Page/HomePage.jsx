@@ -6,8 +6,10 @@ import useFetchAll from "../Hook/useFetchAll";
 import Sidebar from "../Component/Sidebar";
 import ChatWindow from "../Component/ChatWindow";
 import FriendsPage from "./FriendsPage";
+import RestrictedAccountsPage from "./RestrictedAccountsPage";
 import { useCall } from "../../features/call/CallProvider.jsx";
 import { api } from "../Api/Api.js";
+import { Profile } from "./Profile";
 
 function HomePage() {
   const token = sessionStorage.getItem("accessToken");
@@ -22,6 +24,14 @@ function HomePage() {
   const [messageInput, setMessageInput] = useState("");
   const [chatRooms, setChatRooms] = useState([]);
   console.log("🚀 ~ HomePage ~ chatRooms:", chatRooms);
+  
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user")) || null;
+    } catch {
+      return null;
+    }
+  });
 
   // 1. Lấy userId từ token (Cần thiết để subscribe kênh sidebar)
   const myUserId = useMemo(() => {
@@ -169,7 +179,7 @@ function HomePage() {
   };
 
   const handleShowFriends = (viewType) => {
-    setCurrentView(viewType === "friends" ? "friends" : "requests");
+    setCurrentView(viewType);
   };
 
   return (
@@ -195,8 +205,29 @@ function HomePage() {
           setSelectedFiles={setSelectedFiles}
           onStartCall={handleStartCall}
         />
+      ) : currentView === "profile" ? (
+        <div style={{ flex: 1, height: '100vh', display: 'flex' }}>
+          <Profile 
+            userData={currentUser}
+            onLogout={() => {
+              sessionStorage.removeItem("accessToken");
+              localStorage.removeItem("user");
+              window.location.href = "/login";
+            }}
+            onUpdateProfile={(updatedUser) => setCurrentUser(updatedUser)}
+            onBack={() => setCurrentView("chat")}
+            isOtherProfile={false}
+          />
+        </div>
+      ) : currentView === "restricted" ? (
+        <RestrictedAccountsPage 
+          onBackToChat={() => setCurrentView("chat")} 
+        />
       ) : (
-        <FriendsPage onBackToChat={() => setCurrentView("chat")} />
+        <FriendsPage 
+          defaultTab={currentView}
+          onBackToChat={() => setCurrentView("chat")} 
+        />
       )}
     </div>
   );
