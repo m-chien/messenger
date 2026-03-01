@@ -3,6 +3,7 @@ package com.example.WebCloneMessenger.service;
 import com.example.WebCloneMessenger.DTO.AuthResponse;
 import com.example.WebCloneMessenger.DTO.UserLoginRequest;
 import com.example.WebCloneMessenger.Enum.AuthProvider;
+import com.example.WebCloneMessenger.Enum.Role;
 import com.example.WebCloneMessenger.Exception.AppException;
 import com.example.WebCloneMessenger.Exception.ErrorCode;
 import com.example.WebCloneMessenger.Model.User;
@@ -59,10 +60,8 @@ public class AuthService {
         String email = payload.getEmail();
         String name = (String) payload.get("name");
         String avatar = (String) payload.get("picture");
-
         User user = userRepository
                 .findByProviderIdAndProvider(googleId, AuthProvider.GOOGLE.name());
-
         if (user == null) {
             user = new User();
             user.setEmail(email);
@@ -70,6 +69,7 @@ public class AuthService {
             user.setAvatarUrl(avatar);
             user.setProvider(AuthProvider.GOOGLE.name());
             user.setProviderId(googleId);
+            user.setRole(Role.USER.getValue());
             userRepository.save(user);
         }
 

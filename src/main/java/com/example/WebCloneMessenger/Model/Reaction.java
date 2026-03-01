@@ -46,12 +46,4 @@ public class Reaction {
     @JoinColumn(name = "IdMessage", nullable = false)
     private Message message;
 
-    @CreatedDate
-    @Column(nullable = false, updatable = false, columnDefinition = "datetime2")
-    private OffsetDateTime dateCreated;
-
-    @LastModifiedDate
-    @Column(nullable = false, columnDefinition = "datetime2")
-    private OffsetDateTime lastUpdated;
-
 }

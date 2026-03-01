@@ -2,6 +2,7 @@ package com.example.WebCloneMessenger.Controller;
 
 import com.example.WebCloneMessenger.DTO.FriendDTO;
 import com.example.WebCloneMessenger.DTO.FriendDetailDTO;
+import com.example.WebCloneMessenger.DTO.UserDTO;
 import com.example.WebCloneMessenger.service.FriendService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -89,10 +90,10 @@ public class FriendController {
      * GET /api/friends/check?userID1=1&userID2=2
      */
     @GetMapping("/check")
-    public ResponseEntity<Boolean> areFriends(
-            @RequestParam Integer userID1,
+    public ResponseEntity<Boolean> areFriends(Authentication authentication,
             @RequestParam Integer userID2) {
         try {
+            Integer userID1 = Integer.parseInt(authentication.getName());
             boolean result = friendService.areFriends(userID1, userID2);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
@@ -126,6 +127,24 @@ public class FriendController {
         try {
             long count = friendService.countFriends(userId);
             return ResponseEntity.ok(count);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    /**
+     * Get mutual friends between two users
+     * GET /api/friends/mutual?userID1=1&userID2=2
+     */
+    @GetMapping("/mutual")
+    public ResponseEntity<List<UserDTO>> getMutualFriends(Authentication authentication,
+            @RequestParam Integer userID2) {
+        try {
+            System.out.println("start get mutual friends for user: " + authentication.getName() + " and user: " + userID2);
+            int authUserId = Integer.parseInt(authentication.getName());
+            System.out.println(authUserId);
+            List<com.example.WebCloneMessenger.DTO.UserDTO> mutualFriends = friendService.getMutualFriends(authUserId, userID2);
+            return ResponseEntity.ok(mutualFriends);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }

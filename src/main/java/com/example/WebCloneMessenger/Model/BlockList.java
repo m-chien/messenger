@@ -43,12 +43,5 @@ public class BlockList {
     @JoinColumn(name = "BlockedID", nullable = false)
     private User blocked;
 
-    @CreatedDate
-    @Column(nullable = false, updatable = false, columnDefinition = "datetime2")
-    private OffsetDateTime dateCreated;
-
-    @LastModifiedDate
-    @Column(nullable = false, columnDefinition = "datetime2")
-    private OffsetDateTime lastUpdated;
 
 }

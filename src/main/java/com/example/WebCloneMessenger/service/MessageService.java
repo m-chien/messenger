@@ -12,9 +12,11 @@ import com.example.WebCloneMessenger.mapper.AttachmentMapper;
 import com.example.WebCloneMessenger.mapper.MessageMapper;
 import com.example.WebCloneMessenger.mapper.UserMapper;
 import com.example.WebCloneMessenger.repos.*;
-import com.example.WebCloneMessenger.Exception.NotFoundException;
+import com.example.WebCloneMessenger.Exception.AppException;
+import com.example.WebCloneMessenger.Exception.ErrorCode;
 import com.example.WebCloneMessenger.Exception.ReferencedException;
 import jakarta.annotation.PostConstruct;
+import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +27,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
-import javax.sql.DataSource;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,19 +37,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class MessageService {
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
-
-    @PostConstruct
-    public void checkDatabase() {
-        String server = jdbcTemplate.queryForObject("SELECT @@SERVERNAME", String.class);
-        String service = jdbcTemplate.queryForObject("SELECT @@SERVICENAME", String.class);
-
-        System.out.println("SERVER: " + server);
-        System.out.println("SERVICE: " + service);
-        String dbName = jdbcTemplate.queryForObject("SELECT DB_NAME()", String.class);
-        System.out.println(">>> APP CONNECTING TO DB: " + dbName);
-    }
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
     private final ChatRoomRepository chatRoomRepository;
@@ -70,59 +57,47 @@ public class MessageService {
 
     public MessageDTO get(final Integer id) {
         return messageRepository.findById(id).map(messageMapper::toDto)
-                .orElseThrow(NotFoundException::new);
+                .orElseThrow(() -> new AppException(ErrorCode.MESSAGE_NOT_FOUND));
     }
 
 
     public MessageResponseDTO create(final MessageDTO messageDTO) {
         if (messageDTO.getUserId() == null) {
-            throw new IllegalArgumentException("Không có IDUser");
+            throw new AppException(ErrorCode.USER_NOT_FOUND);
         }
         User user = userRepository.findById(messageDTO.getUserId())
-                .orElseThrow(() -> new NotFoundException("User not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
 
         if (messageDTO.getChatroom() == null) {
-            throw new IllegalArgumentException("Chatroom is required");
+            throw new AppException(ErrorCode.CHAT_ROOM_NOT_FOUND);
         }
         ChatRoom chatRoom = chatRoomRepository.findById(messageDTO.getChatroom())
-                .orElseThrow(() -> new NotFoundException("Chatroom not found"));
+                .orElseThrow(() -> new AppException(ErrorCode.CHAT_ROOM_NOT_FOUND));
 
-        // Tạo message entity mới mà không dùng mapper (để tránh ID bị reset)
-        Message message = new Message();
+        Message message = messageMapper.toEntity(messageDTO);
         message.setIdUser(user);
         message.setChatroom(chatRoom);
-        message.setContent(messageDTO.getContent());
-        message.setType(messageDTO.getType());
         message.setDateSend(LocalDateTime.now());
         message.setIsPin(false);
 
         if (messageDTO.getReplyMessage() != null) {
             Message replyMsg = messageRepository.findById(messageDTO.getReplyMessage())
-                    .orElseThrow(() -> new NotFoundException("replyMessage not found"));
+                    .orElseThrow(() -> new AppException(ErrorCode.MESSAGE_NOT_FOUND));
             message.setReplyMessage(replyMsg);
         }
-        System.out.println("Before save ID: " + message.getId());
+
         Message savedMessage = messageRepository.save(message);
-        System.out.println(savedMessage);
-        System.out.println("Message saved with ID: " + savedMessage.getId());
         messageRepository.flush();
 
-        Message test = messageRepository.findById(savedMessage.getId()).orElse(null);
-
-        System.out.println("Saved ID direct: " + savedMessage.getId());
-        System.out.println("Reloaded ID: " + test.getId());
-
         List<AttachmentDTO> attachmentDTOs = new ArrayList<>();
-
         if (messageDTO.getAttachments() != null) {
             for (AttachmentDTO a : messageDTO.getAttachments()) {
                 Attachment attachment = attachmentMapper.toEntity(a);
+                attachment.setId(null);
                 attachment.setIdmessage(savedMessage);
                 Attachment savedAttachment = attachmentRepository.save(attachment);
                 AttachmentDTO attachmentDTO = attachmentMapper.toDto(savedAttachment);
-                attachmentDTO.setFileUrl(
-                        minioService.getPresignedUrl(attachment.getFileUrl())
-                );
+                attachmentDTO.setFileUrl(minioService.getPresignedUrl(attachment.getFileUrl()));
                 attachmentDTOs.add(attachmentDTO);
             }
         }
@@ -144,7 +119,7 @@ public class MessageService {
 
     public void update(final Integer id, final MessageDTO messageDTO) {
         Message message = messageRepository.findById(id)
-                .orElseThrow(NotFoundException::new);
+                .orElseThrow(() -> new AppException(ErrorCode.MESSAGE_NOT_FOUND));
 
         Message updated = messageMapper.toEntity(messageDTO);
 
@@ -155,19 +130,19 @@ public class MessageService {
 
         if (messageDTO.getUserId() != null) {
             User user = userRepository.findById(messageDTO.getUserId())
-                    .orElseThrow(() -> new NotFoundException("iduser not found"));
+                    .orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
             message.setIdUser(user);
         }
 
         if (messageDTO.getChatroom() != null) {
             ChatRoom chatRoom = chatRoomRepository.findById(messageDTO.getChatroom())
-                    .orElseThrow(() -> new NotFoundException("chatroom not found"));
+                    .orElseThrow(() -> new AppException(ErrorCode.CHAT_ROOM_NOT_FOUND));
             message.setChatroom(chatRoom);
         }
 
         if (messageDTO.getReplyMessage() != null) {
             Message replyMsg = messageRepository.findById(messageDTO.getReplyMessage())
-                    .orElseThrow(() -> new NotFoundException("replyMessage not found"));
+                    .orElseThrow(() -> new AppException(ErrorCode.MESSAGE_NOT_FOUND));
             message.setReplyMessage(replyMsg);
         }
         message.setType("text");
@@ -176,7 +151,7 @@ public class MessageService {
 
     public void delete(final Integer id) {
         final Message message = messageRepository.findById(id)
-                .orElseThrow(NotFoundException::new);
+                .orElseThrow(() -> new AppException(ErrorCode.MESSAGE_NOT_FOUND));
         publisher.publishEvent(new BeforeDeleteMessage(id));
         messageRepository.delete(message);
     }

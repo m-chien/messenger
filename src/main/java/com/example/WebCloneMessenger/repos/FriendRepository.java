@@ -25,5 +25,14 @@ public interface FriendRepository extends JpaRepository<Friend, FriendId> {
            "(f.id.userID1 = :userId1 AND f.id.userID2 = :userId2) " +
            "OR (f.id.userID1 = :userId2 AND f.id.userID2 = :userId1)")
     Optional<Friend> findFriend(@Param("userId1") Integer userId1, @Param("userId2") Integer userId2);
+
+    @Query("SELECT u FROM User u WHERE u.id IN (" +
+           "  SELECT CASE WHEN f1.id.userID1 = :userId1 THEN f1.id.userID2 ELSE f1.id.userID1 END " +
+           "  FROM Friend f1 WHERE f1.id.userID1 = :userId1 OR f1.id.userID2 = :userId1" +
+           ") AND u.id IN (" +
+           "  SELECT CASE WHEN f2.id.userID1 = :userId2 THEN f2.id.userID2 ELSE f2.id.userID1 END " +
+           "  FROM Friend f2 WHERE f2.id.userID1 = :userId2 OR f2.id.userID2 = :userId2" +
+           ")")
+    List<com.example.WebCloneMessenger.Model.User> findMutualFriends(@Param("userId1") Integer userId1, @Param("userId2") Integer userId2);
 }
 

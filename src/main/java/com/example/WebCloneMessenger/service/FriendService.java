@@ -1,11 +1,15 @@
 package com.example.WebCloneMessenger.service;
 
+import com.example.WebCloneMessenger.DTO.UserDTO;
 import com.example.WebCloneMessenger.DTO.FriendDTO;
 import com.example.WebCloneMessenger.DTO.FriendDetailDTO;
 import com.example.WebCloneMessenger.Model.Friend;
 import com.example.WebCloneMessenger.Model.FriendId;
+import com.example.WebCloneMessenger.Model.User;
 import com.example.WebCloneMessenger.mapper.FriendMapper;
+import com.example.WebCloneMessenger.mapper.UserMapper;
 import com.example.WebCloneMessenger.repos.FriendRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,15 +19,12 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class FriendService {
 
     private final FriendRepository friendRepository;
     private final FriendMapper friendMapper;
-
-    public FriendService(FriendRepository friendRepository, FriendMapper friendMapper) {
-        this.friendRepository = friendRepository;
-        this.friendMapper = friendMapper;
-    }
+    private final UserMapper userMapper;
 
     /**
      * Add a new friend relationship
@@ -90,6 +91,16 @@ public class FriendService {
      */
     public long countFriends(Integer userId) {
         return friendRepository.findFriendsByUserId(userId).size();
+    }
+
+    /**
+     * Get mutual friends between two users
+     */
+    public List<UserDTO> getMutualFriends(Integer userId1, Integer userId2) {
+        List<User> mutualUsers = friendRepository.findMutualFriends(userId1, userId2);
+        return mutualUsers.stream()
+                .map(userMapper::toUserDTO)
+                .collect(Collectors.toList());
     }
 }
 

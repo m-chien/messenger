@@ -82,8 +82,29 @@ public class UserResource {
         );
     }
     @PostMapping("/auth/google")
-    public AuthResponse loginGoogle(@RequestBody GoogleLoginRequest request) throws Exception {
-        return authService.loginWithGoogle(request.getIdToken());
+    public ResponseEntity<AuthResponse> loginGoogle(
+            @RequestBody GoogleLoginRequest request,
+            HttpServletResponse response) throws Exception {
+
+        AuthResponse auth = authService.loginWithGoogle(request.getIdToken());
+
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", auth.getRefreshToken())
+                .httpOnly(true)
+                .secure(false) // production nên true
+                .path("/")
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite("Lax")
+                .build();
+
+        response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+
+        return ResponseEntity.ok(
+                AuthResponse.builder()
+                        .token(auth.getToken())
+                        .refreshToken(auth.getRefreshToken())
+                        .user(auth.getUser())
+                        .build()
+        );
     }
     @PostMapping("/logout")
     public ResponseEntity<String> logout(@RequestBody String refreshToken) {
